@@ -16,12 +16,16 @@ pe() { sed -n "s/^$1=//p" project.env | tail -n 1 | sed 's/^"\(.*\)"$/\1/'; }
 old_name="$(pe PROJECT_NAME)"; old_slug="$(pe ADDON_SLUG)"; old_desc="$(pe PROJECT_DESCRIPTION)"
 desc="${desc:-$old_desc}"
 dash="${slug//_/-}"
+# Its own host port, so two PocketBase add-ons on one Home Assistant (or two compose projects on
+# one machine) never fight over 8090: 8100-8899, derived from the slug, stable across renames.
+port=$((8100 + $(printf '%s' "$slug" | cksum | cut -d' ' -f1) % 800))
 # sed -i that works on both BSD (macOS) and GNU sed
 sub() { local f="$1"; shift; sed -E "$@" "$f" > "$f.tmp" && mv "$f.tmp" "$f"; }
 changed=()
 
 sub project.env -e "s|^PROJECT_NAME=.*|PROJECT_NAME=\"$name\"|" -e "s|^PROJECT_SLUG=.*|PROJECT_SLUG=$slug|" \
-  -e "s|^ADDON_SLUG=.*|ADDON_SLUG=$slug|" -e "s|^PROJECT_DESCRIPTION=.*|PROJECT_DESCRIPTION=\"$desc\"|"
+  -e "s|^ADDON_SLUG=.*|ADDON_SLUG=$slug|" -e "s|^PROJECT_DESCRIPTION=.*|PROJECT_DESCRIPTION=\"$desc\"|" \
+  -e "s|^DEFAULT_PORT=.*|DEFAULT_PORT=$port|"
 changed+=(project.env)
 
 if [ "$old_slug" != "$slug" ] && [ -d "addon/$old_slug" ]; then
@@ -33,11 +37,13 @@ if [ "$old_slug" != "$slug" ] && [ -d "addon/$old_slug" ]; then
   changed+=("addon/$old_slug -> addon/$slug")
 fi
 a="addon/$slug"
-sub "$a/config.yaml" -e "s|^name: .*|name: $name|" -e "s|^slug: .*|slug: $slug|" -e "s|^description: .*|description: $desc|"
+sub "$a/config.yaml" -e "s|^name: .*|name: $name|" -e "s|^slug: .*|slug: $slug|" -e "s|^description: .*|description: $desc|" \
+  -e "s|^  8090/tcp: [0-9]+$|  8090/tcp: $port|"
 sub "$a/config.yaml" -e "s|^panel_title: .*|panel_title: $name|"
 sub "$a/Dockerfile" -e "s|(org.opencontainers.image.title=)\"[^\"]*\"|\1\"$name\"|" -e "s|(org.opencontainers.image.description=)\"[^\"]*\"|\1\"$desc\"|"
 sub repository.yaml -e "s|^name: .*|name: $name add-ons|" -e "s|^maintainer: .*|maintainer: $name maintainers|"
-sub compose.yaml -e "s|^name: .*|name: $dash|" -e "s|(context: \./addon/).*|\1$slug|" -e "s|(image: ).*:dev|\1$dash:dev|"
+sub compose.yaml -e "s|^name: .*|name: $dash|" -e "s|(context: \./addon/).*|\1$slug|" -e "s|(image: ).*:dev|\1$dash:dev|" \
+  -e "s|\\\$\\{PORT:-[0-9]+\\}|\\\${PORT:-$port}|g"
 # every mention of the old name in the docs (title, banner sample, add-on store entry)
 esc_old="$(printf '%s' "$old_name" | sed 's/[.[\*^$/]/\\&/g')"
 sub README.md -e "1s|^# .*|# $name|" -e "s|$esc_old|$name|g"
@@ -51,6 +57,6 @@ changed+=("$a/rootfs (synced)")
 # the "open the add-on" button carries the slug: re-point the Home Assistant links
 repo_url="$(sed -n 's/^url: *//p' repository.yaml)"
 if [ -n "$repo_url" ]; then scripts/ha-buttons.sh "$repo_url" >/dev/null; changed+=("README.md + repository.yaml (Home Assistant links)"); fi
-printf 'renamed "%s" (%s) -> "%s" (%s)\n' "$old_name" "$old_slug" "$name" "$slug"
+printf 'renamed "%s" (%s) -> "%s" (%s), host port %s\n' "$old_name" "$old_slug" "$name" "$slug" "$port"
 printf '  %s\n' "${changed[@]}"
 echo "Next: rewrite the README intro, replace the example collection (AGENTS.md), run scripts/local-e2e.sh."

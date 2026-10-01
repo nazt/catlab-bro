@@ -46,8 +46,9 @@ jobs:
           docker buildx build --check "addon/$slug"
       - name: Build and smoke test
         run: |
+          port=$(sed -n 's/^DEFAULT_PORT=//p' project.env)
           docker compose up --build -d
-          for i in $(seq 1 60); do curl -fs http://127.0.0.1:8090/api/health && break; sleep 1; done
-          curl -fs http://127.0.0.1:8090/api/health
+          for i in $(seq 1 60); do curl -fs "http://127.0.0.1:$port/api/health" && break; sleep 1; done
+          curl -fs "http://127.0.0.1:$port/api/health"
           docker compose logs | grep -q "credentials shown ONCE"
           docker compose down -v

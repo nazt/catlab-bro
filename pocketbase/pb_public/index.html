@@ -5,6 +5,8 @@
   Inside Home Assistant it asks ./api/app/ha-login for an admin token (granted only through the
   ingress proxy, see pb_hooks/lib/halogin.js), stores it where the PocketBase dashboard looks for
   it, and opens the dashboard: signed in to Home Assistant = signed in to PocketBase.
+  The dashboard forbids being framed (CSP frame-ancestors 'none'), so inside Home Assistant's
+  panel it opens in its own tab, already signed in; opened directly it replaces this page.
 -->
 <html lang="en">
 <head>
@@ -27,13 +29,15 @@
 <main>
   <h1>PocketBase</h1>
   <p id="status">Checking…</p>
-  <a class="button" href="./_/">Open dashboard</a>
+  <a class="button" id="open" href="./_/">Open dashboard</a>
   <p><code>API: <span id="api"></span></code></p>
 </main>
 <script>
   const base = location.pathname.replace(/index\.html$/, "").replace(/\/$/, "")
   document.getElementById("api").textContent = location.origin + base + "/api/"
   const status = (t) => (document.getElementById("status").textContent = t)
+  const framed = window.top !== window   // inside Home Assistant's sidebar panel
+  if (framed) document.getElementById("open").target = "_blank"
 
   fetch("./api/app/ha-login", { credentials: "same-origin" })
     .then(async (r) => {
@@ -48,8 +52,13 @@
       // The dashboard keeps its session under "__pb_superusers__" + its own path, without the
       // trailing slash: e.g. "__pb_superusers__/api/hassio_ingress/<token>/_".
       localStorage.setItem("__pb_superusers__" + base + "/_", JSON.stringify({ token, record, model: record }))
-      status("Signed in through Home Assistant, opening the dashboard…")
-      location.replace("./_/")
+      if (framed) {
+        status("Signed in through Home Assistant as " + record.email + ". The dashboard opens in its own tab, already signed in.")
+        document.getElementById("open").textContent = "Open dashboard ↗"
+      } else {
+        status("Signed in through Home Assistant, opening the dashboard…")
+        location.replace("./_/")
+      }
     })
     .catch(() => status("PocketBase is not reachable yet. Reload in a moment."))
 </script>

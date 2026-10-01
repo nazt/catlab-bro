@@ -1,5 +1,5 @@
 name: Catlab Bro
-version: "0.1.0"
+version: "0.1.1"
 image: "ghcr.io/nazt/{arch}-addon-catlab-bro"
 slug: catlab_bro
 description: PocketBase backend for Catlab Bro
@@ -18,7 +18,7 @@ panel_icon: mdi:database
 panel_title: Catlab Bro
 watchdog: http://[HOST]:[PORT:8090]/api/health
 ports:
-  8090/tcp: 8090
+  8090/tcp: 8277
 ports_description:
   8090/tcp: PocketBase API, realtime and admin UI (/_/)
 webui: http://[HOST]:[PORT:8090]/_/
