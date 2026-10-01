@@ -130,10 +130,15 @@ async function collectionsJsonCheck(token) {
       if (JSON.stringify(canon(c[key])) !== JSON.stringify(canon(r.json[key]))) diffs.push(`${c.name}.${key}`)
     }
   }
-  const names = wanted.map((c) => c.name).sort().join(",")
+  // Every migrated collection must be in the file too (users stays out: an existing server has its own).
+  const all = await api("GET", "/api/collections?perPage=500", { token })
+  const migrated = (all.json?.items || []).filter((c) => !c.system && c.name !== "users").map((c) => c.name).sort()
+  const names = wanted.map((c) => c.name).sort()
+  const missing = [...EXPECTED_COLLECTIONS].filter((n) => !names.includes(n))
   check("collections.json matches the migrated schema",
-    diffs.length === 0 && names === [...EXPECTED_COLLECTIONS].sort().join(","),
-    (diffs.join(", ") || names) + " (run scripts/export-collections.sh)")
+    diffs.length === 0 && names.join(",") === migrated.join(",") && missing.length === 0,
+    (diffs.join(", ") || `file: ${names.join(",")} / migrated: ${migrated.join(",")}` + (missing.length ? ` / tests need: ${missing.join(",")}` : "")) +
+    " (run scripts/export-collections.sh)")
 }
 
 async function main() {

@@ -129,6 +129,8 @@ serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp
 stop
 
 # --- 2c. drop-in migrations (merge-extra.sh + /api/app/migrations) -------------------------------
+# On a copy of the data: the drop-in schema must not leak into the steps after this one.
+mdata="$tmp/data-mig"; cp -R "$data" "$mdata"
 extra="$tmp/extra"; mkdir -p "$extra/pb_migrations"
 cat > "$extra/pb_migrations/1790900000_dropin_demo.js" <<'JS'
 migrate((app) => {
@@ -137,7 +139,7 @@ migrate((app) => {
 JS
 mig() { curl -s "$url/api/app/migrations" -H "Authorization: $atok"; }
 EXTRA_DIR="$extra" BUILTIN_MIGRATIONS="$here/pocketbase/pb_migrations" REPO_URL=https://github.com/example/repo \
-  serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-mig1.log"
+  serve "$mdata" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-mig1.log"
 mig | python3 -c 'import json,sys; d=json.load(sys.stdin); f=d["files"][0]
 assert not f["in_repo"] and d["uncommitted"]==1 and "migrate(" in f["content"]
 assert f["commit_url"].startswith("https://github.com/example/repo/new/main/pocketbase/pb_migrations?filename=1790900000_dropin_demo.js&value=")'
@@ -155,7 +157,7 @@ up() { curl -s -o /dev/null -w '%{http_code}' -X POST "$url/api/app/migrations" 
 result $? "migrations: upload writes a valid file; refuses paths, non-migrations and duplicates"
 stop
 "$here/scripts/merge-extra.sh" "$here/pocketbase" "$extra" "$tmp/run" >/dev/null
-EXTRA_DIR="$extra" serve "$data" "$tmp/run/pb_migrations" "$tmp/run/pb_hooks" "$tmp/serve-mig2.log"
+EXTRA_DIR="$extra" serve "$mdata" "$tmp/run/pb_migrations" "$tmp/run/pb_hooks" "$tmp/serve-mig2.log"
 [ "$(mig | python3 -c 'import json,sys;print(json.load(sys.stdin)["pending"])')" = 0 ] \
   && [ "$(curl -s -o /dev/null -w '%{http_code}' "$url/api/collections/dropin_demo" -H "Authorization: $atok")" = 200 ] \
   && [ "$(mig | python3 -c 'import json,sys;print(len(json.load(sys.stdin)["files"]))')" = 2 ]
@@ -163,7 +165,7 @@ result $? "migrations: after merge + restart the drop-in is applied (collection 
 stop
 # Committed: the same name is now built-in (the next image) -> shown as in the repo, nothing pending.
 mkdir -p "$tmp/builtin" && cp "$here/pocketbase/pb_migrations/"*.js "$extra/pb_migrations/1790900000_dropin_demo.js" "$tmp/builtin/"
-EXTRA_DIR="$extra" BUILTIN_MIGRATIONS="$tmp/builtin" serve "$data" "$tmp/run/pb_migrations" "$tmp/run/pb_hooks" "$tmp/serve-mig3.log"
+EXTRA_DIR="$extra" BUILTIN_MIGRATIONS="$tmp/builtin" serve "$mdata" "$tmp/run/pb_migrations" "$tmp/run/pb_hooks" "$tmp/serve-mig3.log"
 mig | python3 -c 'import json,sys; d=json.load(sys.stdin); f=[x for x in d["files"] if x["name"]=="1790900000_dropin_demo.js"][0]
 assert f["in_repo"] and "commit_url" not in f and d["pending"]==0'
 result $? "migrations: once committed under the same name it shows as in the repo (drop-in can go)"
@@ -176,7 +178,7 @@ tag="ui-v$(tr -d ' \n' < "$here/ui/VERSION")"
 sed "s/%UI_VERSION%/$tag/" "$here/ui/index.html" > "$uidir/current/index.html"
 cp -R "$here/pocketbase/pb_public" "$uidir/current/_setup"
 UI_DIR="$uidir" UI_REPO=example/repo UI_CHANNEL="$tag" \
-  "$pb" serve --dir "$data" --migrationsDir "$tmp/run/pb_migrations" --hooksDir "$here/pocketbase/pb_hooks" \
+  "$pb" serve --dir "$mdata" --migrationsDir "$tmp/run/pb_migrations" --hooksDir "$here/pocketbase/pb_hooks" \
   --publicDir "$uidir/current" --http "127.0.0.1:$port" > "$tmp/serve-ui.log" 2>&1 &
 pid=$!; wait_health
 curl -fs "$url/" | grep -q "name=\"ui-version\" content=\"$tag\""; result $? "ui: the app UI is served at / and carries its release tag"
