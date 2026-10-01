@@ -502,9 +502,11 @@
   // Ask Home Assistant to restart this add-on, wait for PocketBase to answer again, reload.
   async function restart(btn, statusId, what) {
     busy(btn, "Restarting…")
-    const res = await api("app/restart", { method: "POST" }).catch(() => null)   // the restart may cut this short
+    // The restart may cut this request short: no answer at all, or (through Home Assistant's ingress)
+    // a 502/503/504 from the proxy whose add-on just went away. Both mean it is restarting.
+    const res = await api("app/restart", { method: "POST" }).catch(() => null)
     if (res && res.status === 501) { settle(btn, "error"); return say(statusId, (await body(res)).error, "error") }
-    if (res && !res.ok) { settle(btn, "error", "Try again"); return say(statusId, "Not restarted: " + ((await body(res)).error || "HTTP " + res.status), "error") }
+    if (res && !res.ok && ![502, 503, 504].includes(res.status)) { settle(btn, "error", "Try again"); return say(statusId, "Not restarted: " + ((await body(res)).error || "HTTP " + res.status), "error") }
     say(statusId, "Restarting " + what + "…", "pending")
     await sleep(4000)
     for (let i = 0; i < 60; i++) {
