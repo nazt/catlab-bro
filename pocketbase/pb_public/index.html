@@ -109,7 +109,7 @@
   // The app UI (pb_hooks/lib/uiupdate.js): a GitHub release's dist.zip served at "/".
   async function showUI(token) {
     const auth = { headers: { Authorization: token } }
-    const r = await fetch(R + "api/app/ui", auth).catch(() => null)
+    const r = await fetch(R + "api/app/ui?check=1", auth).catch(() => null)
     if (!r || !r.ok) return
     const u = await r.json()
     if (!u.managed) return
