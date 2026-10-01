@@ -31,19 +31,22 @@ jobs:
         run: |
           slug=$(sed -n 's/^ADDON_SLUG=//p' project.env)
           grep -q "^ARG POCKETBASE_VERSION=${POCKETBASE_VERSION}$" "addon/$slug/Dockerfile"
-      - name: collections.json follows the migrations
-        # A migration committed without regenerating collections.json (e.g. through GitHub's web
-        # editor from the panel's "Commit to repo") is fixed here instead of failing the tests.
+      - name: Generated files follow pocketbase/ (collections.json, the add-on copy)
+        # A migration committed from GitHub's web editor (the panel's "Commit to repo") cannot run
+        # export-collections.sh or sync-addon.sh: regenerate both here instead of failing, and
+        # commit them on main.
         run: |
           scripts/export-collections.sh
-          if git diff --quiet pocketbase/collections.json; then echo "collections.json is current"; exit 0; fi
+          scripts/sync-addon.sh
+          if [ -z "$(git status --porcelain pocketbase addon)" ]; then echo "generated files are current"; exit 0; fi
           if [ "${{ github.event_name }}" = push ] && [ "${{ github.ref }}" = refs/heads/main ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -qm "Regenerate collections.json from the migrations" pocketbase/collections.json
+            git add -A pocketbase addon
+            git commit -qm "Regenerate collections.json and the add-on copy from pocketbase/"
             for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 3; done
           else
-            echo "::warning::collections.json is stale: run scripts/export-collections.sh"
+            echo "::warning::generated files are stale: run scripts/export-collections.sh and scripts/sync-addon.sh"
           fi
       - name: Privacy check
         run: python3 scripts/privacy_check.py

@@ -37,7 +37,6 @@ jobs:
       - uses: actions/checkout@v4
       - id: bump
         env:
-          OWNER: ${{ github.repository_owner }}
           SUBJECT: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
@@ -45,30 +44,46 @@ jobs:
           cfg="addon/$slug/config.yaml"
           image=$(sed -n 's/^image: *"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$cfg")
           version=$(sed -n 's/^version: *"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$cfg")
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          [ -n "$image" ] || exit 0
-          repo="${image#ghcr.io/}"; repo="${repo/\{arch\}/amd64}"
-          tok=$(curl -s "https://ghcr.io/token?scope=repository:${repo}:pull" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')
-          code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $tok" \
-            -H 'Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json' \
-            "https://ghcr.io/v2/${repo}/manifests/${version}")
-          if [ "$code" != 200 ]; then echo "version $version is not published yet: building it"; exit 0; fi
-          next=$(echo "$version" | awk -F. -v OFS=. '{$NF=$NF+1; print}')
-          sed -i "s/^version: .*/version: \"$next\"/" "$cfg"
-          subject=$(printf '%s' "${SUBJECT:-update}" | head -n1)
-          python3 - "addon/$slug/CHANGELOG.md" "$next" "$subject" "$(git rev-parse --short HEAD)" <<'PY2'
-          import sys
+          msg=""
+
+          # 1. The add-on's copy of pocketbase/ is generated. A commit from GitHub's web editor (the
+          #    panel's "Commit to repo") cannot run sync-addon.sh, so sync it here, before any build.
+          scripts/sync-addon.sh
+          [ -z "$(git status --porcelain)" ] || msg="Sync the add-on copy of pocketbase/"
+
+          # 2. Already published at this version? Then this push is a new version: bump the patch.
+          published=no
+          if [ -n "$image" ]; then
+            repo="${image#ghcr.io/}"; repo="${repo/\{arch\}/amd64}"
+            tok=$(curl -s "https://ghcr.io/token?scope=repository:${repo}:pull" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))' || true)
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $tok" \
+              -H 'Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json' \
+              "https://ghcr.io/v2/${repo}/manifests/${version}" || true)
+            [ "$code" = 200 ] && published=yes
+          fi
+          if [ "$published" = yes ]; then
+            next=$(echo "$version" | awk -F. -v OFS=. '{$NF=$NF+1; print}')
+            sed -i "s/^version: .*/version: \"$next\"/" "$cfg"
+            subject=$(printf '%s' "${SUBJECT:-update}" | head -n1)
+            python3 - "addon/$slug/CHANGELOG.md" "$next" "$subject" "$(git rev-parse --short HEAD)" <<'PY2'
+          import os, sys
           path, ver, subj, sha = sys.argv[1:]
-          s = open(path).read() if __import__("os").path.exists(path) else "# Changelog\n\n"
+          s = open(path).read() if os.path.exists(path) else "# Changelog\n\n"
           head, _, rest = s.partition("\n\n")
           open(path, "w").write(f"{head}\n\n## {ver}\n\n- {subj} ({sha})\n\n{rest}")
           PY2
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -qam "Release $next (automatic: $version was already published)"
-          for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 3; done
+            msg="Release $next (automatic: $version was already published)"
+          fi
+
+          # 3. Commit (bot; pushes made with this token start no workflows) and build that commit.
+          if [ -n "$msg" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A addon pocketbase && git commit -qm "$msg"
+            for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 3; done
+            echo "$msg"
+          fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "bumped $version -> $next"
 
   build:
     needs: version
