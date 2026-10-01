@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.9
+
+- Release-notes admin page, Plex Sans Thai, UI source + update bar, ha-deploy (template) (d50583c)
+
 ## 0.1.8
 
 - Workflows sync the add-on copy too, so web-editor commits deploy (template) (fda9110)

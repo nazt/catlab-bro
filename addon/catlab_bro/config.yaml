@@ -1,5 +1,5 @@
 name: Catlab Bro
-version: "0.1.8"
+version: "0.1.9"
 image: "ghcr.io/nazt/{arch}-addon-catlab-bro"
 slug: catlab_bro
 description: PocketBase backend for Catlab Bro
