@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.12
+
+- Revalidate HTML after updates, "Restart needed" for a saved source, 1rem inputs (template) (5863981)
+
 ## 0.1.11
 
 - Admin page: a 502 from the ingress proxy during Apply means restarting (template) (76410da)
