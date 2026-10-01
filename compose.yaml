@@ -5,13 +5,13 @@
 #   docker compose down -v           # stop and DELETE all data
 #
 # Settings: copy .env.example to .env (git-ignored). Passwords are always generated.
-name: pocketbase-template
+name: catlab-bro
 
 services:
   pocketbase:
     build:
-      context: ./addon/pocketbase_template
-    image: pocketbase-template:dev
+      context: ./addon/catlab_bro
+    image: catlab-bro:dev
     restart: unless-stopped
     ports:
       # Localhost only. For other devices on your LAN drop "127.0.0.1:" and set PUBLIC_URL in

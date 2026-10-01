@@ -1,4 +1,4 @@
-# PocketBase Template
+# Catlab Bro
 
 A [PocketBase](https://pocketbase.io) backend: REST API, realtime subscriptions and an admin UI
 on one port, with the project's collections and access rules already set up.
@@ -7,14 +7,14 @@ on one port, with the project's collections and access rules already set up.
 
 1. **Settings → Add-ons → Add-on store**, then **⋮ → Repositories**.
 2. Add the URL of the GitHub repository that contains this add-on and close the dialog.
-3. Open **PocketBase Template** in the store and click **Install**. Home Assistant builds the
+3. Open **Catlab Bro** in the store and click **Install**. Home Assistant builds the
    image on the device; this takes a minute or two.
 4. Optional: change the login emails on the **Configuration** tab (below). The defaults work.
 5. Click **Start**, then open the **Log** tab. The first start prints, once:
 
    ```text
    ==================================================================
-    PocketBase Template ready (credentials shown ONCE)
+    Catlab Bro ready (credentials shown ONCE)
     admin UI    : http://homeassistant.local:8090/_/
     admin login : admin@example.invalid / <generated>
     app login   : app@example.invalid / <generated>

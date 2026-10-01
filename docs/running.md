@@ -26,7 +26,7 @@ URL), install, start, and read the **Log** tab for the logins.
   (Packages → package → Package settings → Change visibility). Release a new image by bumping
   `version:` in `config.yaml`. Private repos have no `image:` line and build on the device.
 
-Details in [`addon/pocketbase_template/DOCS.md`](../addon/pocketbase_template/DOCS.md).
+Details in [`addon/catlab_bro/DOCS.md`](../addon/catlab_bro/DOCS.md).
 
 ## On an existing PocketBase
 

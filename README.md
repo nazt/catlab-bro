@@ -1,12 +1,12 @@
-# PocketBase Template
+# Catlab Bro
 
-[![ci](https://github.com/Soul-Brews-Studio/pocketbase-template/actions/workflows/ci.yml/badge.svg)](https://github.com/Soul-Brews-Studio/pocketbase-template/actions/workflows/ci.yml)
+[![ci](https://github.com/nazt/catlab-bro/actions/workflows/ci.yml/badge.svg)](https://github.com/nazt/catlab-bro/actions/workflows/ci.yml)
 ![PocketBase](https://img.shields.io/badge/PocketBase-v0.40.4-b8dbe4)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
 <!-- ha-buttons -->
-[![Add the repository to my Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FSoul-Brews-Studio%2Fpocketbase-template)
-[![Open the add-on in my Home Assistant](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=34a12361_pocketbase_template&repository_url=https%3A%2F%2Fgithub.com%2FSoul-Brews-Studio%2Fpocketbase-template)
+[![Add the repository to my Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fnazt%2Fcatlab-bro)
+[![Open the add-on in my Home Assistant](https://my.home-assistant.io/badges/supervisor_addon.svg)](https://my.home-assistant.io/redirect/supervisor_addon/?addon=da702f49_catlab_bro&repository_url=https%3A%2F%2Fgithub.com%2Fnazt%2Fcatlab-bro)
 <!-- /ha-buttons -->
 
 A new [PocketBase](https://pocketbase.io) backend per project, in one click: **Use this

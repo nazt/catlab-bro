@@ -8,8 +8,8 @@ FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH=""
 ARG BUILD_VERSION=""
-LABEL org.opencontainers.image.title="PocketBase Template" \
-      org.opencontainers.image.description="PocketBase backend with provisioned logins and owner-only example data" \
+LABEL org.opencontainers.image.title="Catlab Bro" \
+      org.opencontainers.image.description="PocketBase backend for Catlab Bro" \
       org.opencontainers.image.licenses="MIT" \
       io.hass.type="addon"
 # Official PocketBase release, verified against the SHA-256 values published in the release's
