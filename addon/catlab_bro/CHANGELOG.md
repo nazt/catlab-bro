@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+
+- Workflows sync the add-on copy too, so web-editor commits deploy (template) (fda9110)
+
 ## 0.1.7
 
 - Add cats collection (drop-in migration from the Catlab Bro panel) (0541b52)
