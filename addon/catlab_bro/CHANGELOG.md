@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.10
+
+- Review fixes: Home Assistant's neutral ground, the new-tab arrow against its link, paths break at / (template); UI 0.1.4 (446d926)
+
 ## 0.1.9
 
 - Release-notes admin page, Plex Sans Thai, UI source + update bar, ha-deploy (template) (d50583c)
