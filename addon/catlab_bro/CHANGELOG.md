@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- App UI at / (ui/ -> release dist.zip), admin page at /_setup/, Update UI (template 3b82fe7) (8990b25)
+
 ## 0.1.4
 
 - Panel: commit links for drop-ins, running version + commit; automatic versions (template b595e11) (4381c3f)
