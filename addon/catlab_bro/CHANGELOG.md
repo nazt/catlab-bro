@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Panel: commit links for drop-ins, running version + commit; automatic versions (template b595e11) (4381c3f)
+
 ## 0.1.3
 
 - Dashboard inside the sidebar panel.
