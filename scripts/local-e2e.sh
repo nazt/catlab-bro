@@ -136,7 +136,14 @@ migrate((app) => {
 }, (app) => { app.delete(app.findCollectionByNameOrId("dropin_demo")) })
 JS
 mig() { curl -s "$url/api/app/migrations" -H "Authorization: $atok"; }
-EXTRA_DIR="$extra" serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-mig1.log"
+EXTRA_DIR="$extra" BUILTIN_MIGRATIONS="$here/pocketbase/pb_migrations" REPO_URL=https://github.com/example/repo \
+  serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-mig1.log"
+mig | python3 -c 'import json,sys; d=json.load(sys.stdin); f=d["files"][0]
+assert not f["in_repo"] and d["uncommitted"]==1 and "migrate(" in f["content"]
+assert f["commit_url"].startswith("https://github.com/example/repo/new/main/pocketbase/pb_migrations?filename=1790900000_dropin_demo.js&value=")'
+result $? "migrations: a drop-in not in the repo gets a Commit-to-repo link (same name, pre-filled content)"
+curl -s "$url/api/app/info" -H "Authorization: $atok" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["version"]=="dev" and d["repo"]=="https://github.com/example/repo"'
+result $? "info: the panel learns the running version/commit and the repository"
 [ "$(mig | python3 -c 'import json,sys;print(json.load(sys.stdin)["pending"])')" = 1 ]; result $? "migrations: a dropped-in file shows as pending"
 [ "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/api/app/restart" -H "Authorization: $atok")" = 501 ]
 result $? "migrations: restart outside Home Assistant says to restart the container (501)"
@@ -153,6 +160,14 @@ EXTRA_DIR="$extra" serve "$data" "$tmp/run/pb_migrations" "$tmp/run/pb_hooks" "$
   && [ "$(curl -s -o /dev/null -w '%{http_code}' "$url/api/collections/dropin_demo" -H "Authorization: $atok")" = 200 ] \
   && [ "$(mig | python3 -c 'import json,sys;print(len(json.load(sys.stdin)["files"]))')" = 2 ]
 result $? "migrations: after merge + restart the drop-in is applied (collection exists, nothing pending)"
+stop
+# Committed: the same name is now built-in (the next image) -> shown as in the repo, nothing pending.
+mkdir -p "$tmp/builtin" && cp "$here/pocketbase/pb_migrations/"*.js "$extra/pb_migrations/1790900000_dropin_demo.js" "$tmp/builtin/"
+EXTRA_DIR="$extra" BUILTIN_MIGRATIONS="$tmp/builtin" serve "$data" "$tmp/run/pb_migrations" "$tmp/run/pb_hooks" "$tmp/serve-mig3.log"
+mig | python3 -c 'import json,sys; d=json.load(sys.stdin); f=[x for x in d["files"] if x["name"]=="1790900000_dropin_demo.js"][0]
+assert f["in_repo"] and "commit_url" not in f and d["pending"]==0'
+result $? "migrations: once committed under the same name it shows as in the repo (drop-in can go)"
+
 stop
 
 # --- 3. same schema, hooks disabled ------------------------------------------------------------

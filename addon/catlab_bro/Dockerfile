@@ -8,10 +8,13 @@ FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH=""
 ARG BUILD_VERSION=""
+# The git commit this image was built from (addon-image.yml passes it): shown in the panel.
+ARG GIT_SHA=""
 LABEL org.opencontainers.image.title="Catlab Bro" \
       org.opencontainers.image.description="PocketBase backend for Catlab Bro" \
       org.opencontainers.image.licenses="MIT" \
-      io.hass.type="addon"
+      io.hass.type="addon" \
+      org.opencontainers.image.revision="${GIT_SHA}"
 # Official PocketBase release, verified against the SHA-256 values published in the release's
 # checksums.txt. Change all three together with scripts/bump-pocketbase.sh <version>.
 ARG POCKETBASE_VERSION=0.40.4
@@ -36,6 +39,7 @@ RUN set -eux; \
 # /opt/app holds migrations, hooks, provision.sh and project.env: generated copies of the repo
 # root's files, written by scripts/sync-addon.sh (never edit them here).
 COPY rootfs /
+RUN printf 'version=%s\ncommit=%s\n' "${BUILD_VERSION:-dev}" "${GIT_SHA:-dev}" > /opt/app/BUILD
 COPY run.sh /run.sh
 RUN chmod 755 /run.sh /opt/app/provision.sh /opt/app/merge-extra.sh
 

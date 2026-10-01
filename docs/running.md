@@ -26,12 +26,16 @@ URL), install, start, and read the **Log** tab for the logins.
   (Packages → package → Package settings → Change visibility). Release a new image by bumping
   `version:` in `config.yaml`. Private repos have no `image:` line and build on the device.
 
-- **Drop-in migrations:** JS migrations (and hooks) can be added without a new image. Put them
-  in `/addon_configs/<this add-on>/pb_migrations` (Samba or File editor add-on), or use **Upload a
-  migration** in the panel; the panel lists them as *pending* and **Apply migrations** restarts the
-  add-on, which applies them. Locally, `compose.yaml` mounts `./extra` the same way. A drop-in
-  named like a built-in file is refused. Keep migrations you want permanently in
-  `pocketbase/pb_migrations/` in the repo.
+- **Migrations live in the repo.** Add them to `pocketbase/pb_migrations/` and push: the
+  `addon-image` workflow publishes a new version (bumping the patch number itself if you did not),
+  CI regenerates `collections.json`, and Home Assistant offers the update, which applies them.
+  The panel shows the running version and the commit it was built from.
+- **Drop-in migrations are a hotfix path:** put a `.js` file in
+  `/addon_configs/<this add-on>/pb_migrations` (Samba or File editor) or use **Upload a migration**
+  in the panel, then **Apply migrations** (restarts the add-on). Until it is committed, the panel
+  marks it *not in the repo yet* with **Commit to repo ↗** (GitHub's editor, pre-filled, same
+  file name) and **Download**. Once the next version ships it as built-in, the drop-in is ignored
+  and never runs twice. Locally, `compose.yaml` mounts `./extra` the same way.
 
 Details in [`addon/catlab_bro/DOCS.md`](../addon/catlab_bro/DOCS.md).
 

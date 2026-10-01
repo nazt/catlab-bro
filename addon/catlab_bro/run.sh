@@ -46,6 +46,9 @@ export PUBLIC_URL="$url" CREDENTIALS_FILE=/data/initial-credentials.txt SETUP_SC
 # Drop-in migrations/hooks (/config = /addon_configs/<slug>/ under Home Assistant; mount one at
 # /config in compose) merged with the built-in ones into /data/runtime, rebuilt on every start.
 export EXTRA_DIR="${EXTRA_DIR:-/config}"
+# for the panel: the built-in migrations (to tell committed drop-ins apart), the repo and this build
+export BUILTIN_MIGRATIONS="$app/pb_migrations" REPO_URL="$(pe REPO_URL)"
+export BUILD_VERSION="$(sed -n 's/^version=//p' "$app/BUILD" 2>/dev/null)" GIT_SHA="$(sed -n 's/^commit=//p' "$app/BUILD" 2>/dev/null)"
 run=/data/runtime
 "$app/merge-extra.sh" "$app" "$EXTRA_DIR" "$run" | while read -r line; do bashio::log.info "$line"; done
 [ -f "$EXTRA_DIR/README.txt" ] || cat > "$EXTRA_DIR/README.txt" <<'TXT'

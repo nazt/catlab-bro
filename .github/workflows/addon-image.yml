@@ -4,7 +4,10 @@
 #
 # Runs only when config.yaml has an `image:` line for THIS repository's owner. The init workflow
 # adds that line in public repositories (scripts/ha-buttons.sh --image) and starts this workflow.
-# Bump `version:` in config.yaml to release a new image.
+# Every push that changes the backend becomes a new version Home Assistant can offer: if
+# config.yaml's `version:` is already published, the `version` job bumps the patch number, adds a
+# CHANGELOG line with the commit subject, and commits that (as github-actions) before building.
+# The image records the commit it was built from (GIT_SHA), which the panel shows.
 #
 # GHCR packages start PRIVATE, even from a public repository, and Supervisor pulls anonymously:
 # after the first run, open the two packages (Your profile/org -> Packages) -> Package settings ->
@@ -22,11 +25,53 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write   # the version job commits the bump
   packages: write
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.bump.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: bump
+        env:
+          OWNER: ${{ github.repository_owner }}
+          SUBJECT: ${{ github.event.head_commit.message }}
+        run: |
+          set -euo pipefail
+          slug=$(sed -n 's/^ADDON_SLUG=//p' project.env)
+          cfg="addon/$slug/config.yaml"
+          image=$(sed -n 's/^image: *"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$cfg")
+          version=$(sed -n 's/^version: *"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$cfg")
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          [ -n "$image" ] || exit 0
+          repo="${image#ghcr.io/}"; repo="${repo/\{arch\}/amd64}"
+          tok=$(curl -s "https://ghcr.io/token?scope=repository:${repo}:pull" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("token",""))')
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $tok" \
+            -H 'Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json' \
+            "https://ghcr.io/v2/${repo}/manifests/${version}")
+          if [ "$code" != 200 ]; then echo "version $version is not published yet: building it"; exit 0; fi
+          next=$(echo "$version" | awk -F. -v OFS=. '{$NF=$NF+1; print}')
+          sed -i "s/^version: .*/version: \"$next\"/" "$cfg"
+          subject=$(printf '%s' "${SUBJECT:-update}" | head -n1)
+          python3 - "addon/$slug/CHANGELOG.md" "$next" "$subject" "$(git rev-parse --short HEAD)" <<'PY2'
+          import sys
+          path, ver, subj, sha = sys.argv[1:]
+          s = open(path).read() if __import__("os").path.exists(path) else "# Changelog\n\n"
+          head, _, rest = s.partition("\n\n")
+          open(path, "w").write(f"{head}\n\n## {ver}\n\n- {subj} ({sha})\n\n{rest}")
+          PY2
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qam "Release $next (automatic: $version was already published)"
+          for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 3; done
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "bumped $version -> $next"
+
   build:
+    needs: version
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -37,6 +82,8 @@ jobs:
             platform: linux/arm64
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
       - id: v
         env:
           OWNER: ${{ github.repository_owner }}
@@ -79,6 +126,7 @@ jobs:
           build-args: |
             BUILD_ARCH=${{ matrix.arch }}
             BUILD_VERSION=${{ steps.v.outputs.version }}
+            GIT_SHA=${{ needs.version.outputs.sha }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             io.hass.arch=${{ matrix.arch }}

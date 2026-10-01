@@ -28,6 +28,12 @@ if [ "$want_image" = "--image" ] || grep -q '^image:' "$cfg"; then
   fi
 fi
 
+if grep -q '^REPO_URL=' project.env; then
+  sed -E "s|^REPO_URL=.*|REPO_URL=$url|" project.env > project.env.tmp && mv project.env.tmp project.env
+else
+  printf 'REPO_URL=%s\n' "$url" >> project.env
+fi
+
 if grep -q '^url:' repository.yaml; then
   sed -E "s|^url:.*|url: $url|" repository.yaml > repository.yaml.tmp && mv repository.yaml.tmp repository.yaml
 else

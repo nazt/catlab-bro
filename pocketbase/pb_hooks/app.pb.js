@@ -98,6 +98,7 @@ routerAdd("GET", "/api/app/ha-login", (e) => require(`${__hooks}/lib/halogin.js`
 // Drop-in migrations for the panel (see lib/migrations.js). Superusers only.
 routerAdd("GET", "/api/app/migrations", (e) => require(`${__hooks}/lib/migrations.js`).status(e), $apis.requireSuperuserAuth())
 routerAdd("POST", "/api/app/migrations", (e) => require(`${__hooks}/lib/migrations.js`).upload(e), $apis.requireSuperuserAuth())
+routerAdd("GET", "/api/app/info", (e) => require(`${__hooks}/lib/migrations.js`).info(e), $apis.requireSuperuserAuth())
 routerAdd("POST", "/api/app/restart", (e) => require(`${__hooks}/lib/migrations.js`).restart(e), $apis.requireSuperuserAuth())
 
 // The app's setup link + login for the panel (see lib/setup.js). Superusers only.

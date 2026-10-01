@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write   # commits a regenerated collections.json on main
+
 env:
   POCKETBASE_VERSION: "0.40.4"
 
@@ -28,6 +31,20 @@ jobs:
         run: |
           slug=$(sed -n 's/^ADDON_SLUG=//p' project.env)
           grep -q "^ARG POCKETBASE_VERSION=${POCKETBASE_VERSION}$" "addon/$slug/Dockerfile"
+      - name: collections.json follows the migrations
+        # A migration committed without regenerating collections.json (e.g. through GitHub's web
+        # editor from the panel's "Commit to repo") is fixed here instead of failing the tests.
+        run: |
+          scripts/export-collections.sh
+          if git diff --quiet pocketbase/collections.json; then echo "collections.json is current"; exit 0; fi
+          if [ "${{ github.event_name }}" = push ] && [ "${{ github.ref }}" = refs/heads/main ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -qm "Regenerate collections.json from the migrations" pocketbase/collections.json
+            for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 3; done
+          else
+            echo "::warning::collections.json is stale: run scripts/export-collections.sh"
+          fi
       - name: Privacy check
         run: python3 scripts/privacy_check.py
       - name: Add-on in sync

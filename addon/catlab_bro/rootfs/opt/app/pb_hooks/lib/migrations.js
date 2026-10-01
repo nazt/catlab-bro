@@ -2,6 +2,13 @@
 // restart (PocketBase applies pending migrations when it starts). Superusers only.
 //
 //   EXTRA_DIR         the drop-in folder (/config in the add-on = /addon_configs/<slug>/ on the host)
+//   BUILTIN_MIGRATIONS the migrations shipped in the image (= pocketbase/pb_migrations in the repo)
+//   REPO_URL          the repository: a drop-in not in it yet gets a "Commit to repo" link
+//
+// The repo is the source of truth. A drop-in is a hotfix until it is committed to
+// pocketbase/pb_migrations/ with the SAME name: the next image then ships it as built-in, the
+// drop-in is ignored (merge-extra.sh refuses same-name drop-ins) and PocketBase does not run it
+// again (it is already in _migrations).
 //   SUPERVISOR_TOKEN  set by Home Assistant (hassio_api): lets the add-on restart itself
 
 /** Names of migration files PocketBase has applied. */
@@ -11,7 +18,23 @@ function applied(app) {
   return rows.map((r) => r.file)
 }
 
-/** GET /api/app/migrations -> {dir, files: [{name, applied}], pending} */
+function builtinNames() {
+  const dir = ($os.getenv("BUILTIN_MIGRATIONS") || "").trim()
+  try {
+    return dir ? $os.readDir(dir).map((d) => d.name()) : []
+  } catch (_) {
+    return []
+  }
+}
+
+/** GitHub's "new file" page, pre-filled: the user commits with their own login (no token here). */
+function commitUrl(repo, name, content) {
+  if (!repo || content.length > 6000) return ""   // long files: download and commit by hand
+  return repo.replace(/\/+$/, "") + "/new/main/pocketbase/pb_migrations?filename=" +
+    encodeURIComponent(name) + "&value=" + encodeURIComponent(content)
+}
+
+/** GET /api/app/migrations -> {dir, repo, files: [{name, applied, in_repo, content?, commit_url?}], pending, uncommitted} */
 function status(e) {
   const dir = ($os.getenv("EXTRA_DIR") || "").trim()
   if (!dir) return e.json(200, { dir: "", files: [], pending: 0, note: "no drop-in folder configured" })
@@ -20,8 +43,21 @@ function status(e) {
   try {
     names = $os.readDir(dir + "/pb_migrations").map((d) => d.name()).filter((n) => n.endsWith(".js")).sort()
   } catch (_) {}
-  const files = names.map((name) => ({ name, applied: done.indexOf(name) >= 0 }))
-  return e.json(200, { dir, files, pending: files.filter((f) => !f.applied).length })
+  const builtin = builtinNames()
+  const repo = ($os.getenv("REPO_URL") || "").trim()
+  const files = names.map((name) => {
+    const f = { name, applied: done.indexOf(name) >= 0, in_repo: builtin.indexOf(name) >= 0 }
+    if (!f.in_repo) {
+      f.content = toString($os.readFile(dir + "/pb_migrations/" + name))
+      f.commit_url = commitUrl(repo, name, f.content)
+    }
+    return f
+  })
+  return e.json(200, {
+    dir, repo, files,
+    pending: files.filter((f) => !f.applied && !f.in_repo).length,
+    uncommitted: files.filter((f) => !f.in_repo).length,
+  })
 }
 
 /** POST /api/app/migrations {name, content}: drop a migration file into the drop-in folder. */
@@ -59,4 +95,23 @@ function restart(e) {
   return e.json(202, { restarting: true })
 }
 
-module.exports = { applied, status, upload, restart }
+/** GET /api/app/info -> this build (version, commit, repo) and, under Home Assistant, whether a newer
+ *  version of the add-on is out (Supervisor /addons/self/info; installing it stays a Home Assistant
+ *  action: this add-on does not get the manager role it would need to update itself). */
+function info(e) {
+  const env = (k) => ($os.getenv(k) || "").trim()
+  const out = { version: env("BUILD_VERSION") || "dev", commit: env("GIT_SHA") || "dev", repo: env("REPO_URL"), update: null }
+  const token = env("SUPERVISOR_TOKEN")
+  if (token) {
+    try {
+      const res = $http.send({ url: "http://supervisor/addons/self/info", headers: { Authorization: "Bearer " + token }, timeout: 5 })
+      const d = (res.json && res.json.data) || {}
+      out.update = { available: !!d.update_available, latest: d.version_latest || "", slug: d.slug || "" }
+    } catch (err) {
+      console.log("info: Supervisor: " + err)
+    }
+  }
+  return e.json(200, out)
+}
+
+module.exports = { applied, builtinNames, commitUrl, status, upload, restart, info }

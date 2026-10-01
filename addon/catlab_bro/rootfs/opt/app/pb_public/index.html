@@ -29,12 +29,17 @@
     button.copy { margin-left: 6px; font-size: 12px; }
     #migrations { display: none; margin-top: 18px; border-top: 1px solid #374151; padding-top: 14px; }
     #migrations li.pending { color: #fbbf24; }
+    #migrations li .warn { color: #f87171; }
+    #migrations li a { color: var(--accent); margin-left: 6px; }
+    #build { font-size: 13px; }
+    #build a { color: var(--accent); }
   </style>
 </head>
 <body>
 <main>
   <h1>PocketBase</h1>
   <p id="status">Checking…</p>
+  <p id="build"></p>
   <a class="button" id="open" href="./_/">Open dashboard</a>
   <a class="button" id="tab" href="./_/" target="_blank" style="display:none; margin-left:8px">↗</a>
   <p><code>API: <span id="api"></span></code></p>
@@ -48,6 +53,8 @@
   <section id="migrations">
     <p><strong>Migrations</strong>: drop <code>.js</code> files into <code id="mig-dir"></code><code>/pb_migrations</code>
       (Home Assistant: <code>/addon_configs/&lt;this add-on&gt;/</code>, via Samba or File editor).</p>
+    <p>The repository is the source of truth: commit each drop-in to <code>pocketbase/pb_migrations/</code> under the
+      <strong>same name</strong> (the next version then ships it, and it is not run twice).</p>
     <ul id="mig-list"></ul>
     <p><label>Upload a migration: <input type="file" id="mig-file" accept=".js"></label></p>
     <a class="button" id="mig-apply" href="#" style="display:none">Apply migrations (restarts)</a>
@@ -79,6 +86,7 @@
       localStorage.setItem("__pb_superusers__" + base + "/_", JSON.stringify({ token, record, model: record }))
       showSetup(token)
       showMigrations(token)
+      showBuild(token)
       if (framed) {
         status("Signed in through Home Assistant as " + record.email + ".")
       } else {
@@ -89,6 +97,25 @@
     .catch(() => status("PocketBase is not reachable yet. Reload in a moment."))
 
   // The app's setup link and login, for superusers only (pb_hooks/lib/setup.js), as a QR code.
+  // This build (version + git commit) and, in Home Assistant, a newer version of the add-on.
+  async function showBuild(token) {
+    const r = await fetch("./api/app/info", { headers: { Authorization: token } }).catch(() => null)
+    if (!r || !r.ok) return
+    const i = await r.json()
+    const el = document.getElementById("build")
+    el.textContent = "Running " + i.version + " · "
+    const c = document.createElement(i.repo && i.commit !== "dev" ? "a" : "span")
+    c.textContent = i.commit === "dev" ? "local build" : i.commit.slice(0, 7)
+    if (c.tagName === "A") { c.href = i.repo + "/commit/" + i.commit; c.target = "_blank"; c.rel = "noopener" }
+    el.append(c)
+    if (i.update && i.update.available) {
+      const u = document.createElement("a"); u.target = "_top"
+      u.href = "/config/app/" + i.update.slug + "/info"
+      u.textContent = " · update " + i.update.latest + " available: install it on the add-on page"
+      el.append(u)
+    }
+  }
+
   // Drop-in migrations (pb_hooks/lib/migrations.js): pending files, and a restart that applies them.
   async function showMigrations(token) {
     const auth = { headers: { Authorization: token } }
@@ -101,8 +128,17 @@
     list.innerHTML = ""
     for (const f of m.files) {
       const li = document.createElement("li")
-      li.textContent = (f.applied ? "✓ " : "• ") + f.name + (f.applied ? "" : "  (pending)")
-      if (!f.applied) li.className = "pending"
+      li.textContent = (f.applied || f.in_repo ? "✓ " : "• ") + f.name + (f.applied || f.in_repo ? "" : "  (pending)")
+      if (!f.applied && !f.in_repo) li.className = "pending"
+      if (f.in_repo) {
+        li.append(" · in the repo now: you can delete this drop-in")
+      } else {
+        const warn = document.createElement("span"); warn.className = "warn"; warn.textContent = " · not in the repo yet"
+        li.append(warn)
+        if (f.commit_url) { const a = document.createElement("a"); a.href = f.commit_url; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Commit to repo ↗"; li.append(a) }
+        const dl = document.createElement("a"); dl.textContent = "Download"; dl.download = f.name
+        dl.href = URL.createObjectURL(new Blob([f.content], { type: "text/javascript" })); li.append(dl)
+      }
       list.appendChild(li)
     }
     if (!m.files.length) list.innerHTML = "<li>No drop-in migrations yet.</li>"
