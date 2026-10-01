@@ -50,6 +50,11 @@
     <p><code id="setup-login"></code></p>
     <p><code id="setup-link"></code> <button class="copy" id="copy">Copy link</button></p>
   </section>
+  <section id="ui" style="display:none; margin-top:18px; border-top:1px solid #374151; padding-top:14px">
+    <p><strong>App UI</strong>: <span id="ui-line"></span></p>
+    <a class="button" id="ui-update" href="#" style="display:none">Update UI</a> <a href="#" id="ui-open">Open the app UI</a>
+    <p id="ui-status"></p>
+  </section>
   <section id="migrations">
     <p><strong>Migrations</strong>: drop <code>.js</code> files into <code id="mig-dir"></code><code>/pb_migrations</code>
       (Home Assistant: <code>/addon_configs/&lt;this add-on&gt;/</code>, via Samba or File editor).</p>
@@ -63,7 +68,10 @@
 </main>
 <script src="./vendor/qrcode-generator-1.4.4.js"></script>
 <script>
-  const base = location.pathname.replace(/index\.html$/, "").replace(/\/$/, "")
+  // The app's root: this page is "/" (no app UI) or "/_setup/" (an app UI owns "/").
+  const R = location.pathname.replace(/index\.html$/, "").replace(/_setup\/$/, "")
+  const base = R.replace(/\/$/, "")
+  for (const id of ["open", "tab"]) document.getElementById(id).href = R + "_/"
   document.getElementById("api").textContent = location.origin + base + "/api/"
   const status = (t) => (document.getElementById("status").textContent = t)
   const framed = window.top !== window   // inside Home Assistant's sidebar panel
@@ -71,7 +79,7 @@
   // the ingress URL is no use to apps (they need the published port, shown under "Set up an app")
   if (framed) document.getElementById("api").parentElement.parentElement.style.display = "none"
 
-  fetch("./api/app/ha-login", { credentials: "same-origin" })
+  fetch(R + "api/app/ha-login", { credentials: "same-origin" })
     .then(async (r) => {
       if (!r.ok) {
         const why = (await r.json().catch(() => ({}))).error || r.status
@@ -87,19 +95,43 @@
       showSetup(token)
       showMigrations(token)
       showBuild(token)
+      showUI(token)
       if (framed) {
         status("Signed in through Home Assistant as " + record.email + ".")
       } else {
         status("Signed in through Home Assistant, opening the dashboard…")
-        location.replace("./_/")
+        location.replace(R + "_/")
       }
     })
     .catch(() => status("PocketBase is not reachable yet. Reload in a moment."))
 
   // The app's setup link and login, for superusers only (pb_hooks/lib/setup.js), as a QR code.
+  // The app UI (pb_hooks/lib/uiupdate.js): a GitHub release's dist.zip served at "/".
+  async function showUI(token) {
+    const auth = { headers: { Authorization: token } }
+    const r = await fetch(R + "api/app/ui", auth).catch(() => null)
+    if (!r || !r.ok) return
+    const u = await r.json()
+    if (!u.managed) return
+    document.getElementById("ui-line").textContent = "running " + (u.installed || "an unknown build") + " from " + u.repo +
+      (u.channel === "latest" ? (u.update ? " · " + u.latest + " is out" : " · up to date") : " · pinned to " + u.channel)
+    document.getElementById("ui-open").href = R
+    const btn = document.getElementById("ui-update")
+    btn.style.display = u.update ? "inline-block" : "none"
+    btn.onclick = async (ev) => {
+      ev.preventDefault()
+      document.getElementById("ui-status").textContent = "Updating to " + u.latest + "…"
+      const res = await fetch(R + "api/app/ui/update", { method: "POST", ...auth }).catch(() => null)
+      const out = res ? await res.json().catch(() => ({})) : {}
+      document.getElementById("ui-status").textContent = res && res.ok ? "Now running " + out.installed + "." : "Update failed: " + (out.error || "no answer")
+      showUI(token)
+    }
+    document.getElementById("ui").style.display = "block"
+  }
+
   // This build (version + git commit) and, in Home Assistant, a newer version of the add-on.
   async function showBuild(token) {
-    const r = await fetch("./api/app/info", { headers: { Authorization: token } }).catch(() => null)
+    const r = await fetch(R + "api/app/info", { headers: { Authorization: token } }).catch(() => null)
     if (!r || !r.ok) return
     const i = await r.json()
     const el = document.getElementById("build")
@@ -119,7 +151,7 @@
   // Drop-in migrations (pb_hooks/lib/migrations.js): pending files, and a restart that applies them.
   async function showMigrations(token) {
     const auth = { headers: { Authorization: token } }
-    const r = await fetch("./api/app/migrations", auth).catch(() => null)
+    const r = await fetch(R + "api/app/migrations", auth).catch(() => null)
     if (!r || !r.ok) return
     const m = await r.json()
     if (!m.dir) return
@@ -147,12 +179,12 @@
     apply.onclick = async (ev) => {
       ev.preventDefault()
       const say = (t) => (document.getElementById("mig-status").textContent = t)
-      const res = await fetch("./api/app/restart", { method: "POST", ...auth }).catch(() => null)
+      const res = await fetch(R + "api/app/restart", { method: "POST", ...auth }).catch(() => null)
       if (res && res.status === 501) return say((await res.json()).error)
       say("Restarting to apply " + m.pending + " migration(s)…")
       await new Promise((ok) => setTimeout(ok, 4000))
       for (let i = 0; i < 60; i++) {   // back up when health answers again
-        const h = await fetch("./api/health").catch(() => null)
+        const h = await fetch(R + "api/health").catch(() => null)
         if (h && h.ok) return location.reload()
         await new Promise((ok) => setTimeout(ok, 2000))
       }
@@ -160,7 +192,7 @@
     }
     document.getElementById("mig-file").onchange = async (ev) => {
       const file = ev.target.files[0]; if (!file) return
-      const res = await fetch("./api/app/migrations", { method: "POST",
+      const res = await fetch(R + "api/app/migrations", { method: "POST",
         headers: { Authorization: token, "Content-Type": "application/json" },
         body: JSON.stringify({ name: file.name, content: await file.text() }) })
       const out = await res.json().catch(() => ({}))
@@ -171,7 +203,7 @@
   }
 
   async function showSetup(token) {
-    const r = await fetch("./api/app/setup", { headers: { Authorization: token } }).catch(() => null)
+    const r = await fetch(R + "api/app/setup", { headers: { Authorization: token } }).catch(() => null)
     if (!r || !r.ok) return
     const s = await r.json()
     const qr = qrcode(0, "M"); qr.addData(s.link); qr.make()

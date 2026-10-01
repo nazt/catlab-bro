@@ -101,6 +101,17 @@ routerAdd("POST", "/api/app/migrations", (e) => require(`${__hooks}/lib/migratio
 routerAdd("GET", "/api/app/info", (e) => require(`${__hooks}/lib/migrations.js`).info(e), $apis.requireSuperuserAuth())
 routerAdd("POST", "/api/app/restart", (e) => require(`${__hooks}/lib/migrations.js`).restart(e), $apis.requireSuperuserAuth())
 
+// The app UI (lib/uiupdate.js): which release runs, which is out, and swapping a newer one in.
+routerAdd("GET", "/api/app/ui", (e) => e.json(200, require(`${__hooks}/lib/uiupdate.js`).status(e.app, false)), $apis.requireSuperuserAuth())
+routerAdd("POST", "/api/app/ui/update", (e) => {
+  try {
+    return e.json(200, require(`${__hooks}/lib/uiupdate.js`).update(e.app))
+  } catch (err) {
+    return e.json(500, { error: String(err) })
+  }
+}, $apis.requireSuperuserAuth())
+cronAdd("ui-update-check", "*/15 * * * *", () => { require(`${__hooks}/lib/uiupdate.js`).status($app, false) })
+
 // The app's setup link + login for the panel (see lib/setup.js). Superusers only.
 routerAdd("GET", "/api/app/setup", (e) => require(`${__hooks}/lib/setup.js`).setup(e), $apis.requireSuperuserAuth())
 

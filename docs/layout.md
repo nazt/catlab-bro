@@ -7,6 +7,7 @@
 │   └── collections.json        the same schema for "Import collections" (generated)
 ├── addon/<slug>/               the image: Dockerfile, run.sh, Home Assistant add-on files
 │   └── rootfs/                 generated copy of pocketbase/ + provision.sh (never edit)
+├── ui/                         example app UI (plain HTML) -> release ui-v<VERSION> dist.zip, served at /
 ├── scripts/
 │   ├── provision.sh            first-start logins, random passwords, idempotent
 │   ├── e2e.mjs, local-e2e.sh   provisioning, rules, realtime and import tests

@@ -1,0 +1,75 @@
+<!doctype html>
+<!--
+  Example app UI, served at "/" by the add-on (ui_repo + ui_version), published as dist.zip on a
+  GitHub release by .github/workflows/ui-release.yml. Plain HTML + fetch, no build step: replace it
+  with your own app (any framework) as long as the release carries a dist.zip with index.html at
+  its root and relative URLs (it runs under Home Assistant's ingress prefix too).
+  The release workflow fills in the version below.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="ui-version" content="%UI_VERSION%">
+  <title>Catlab Bro</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #0f172a; --card: #1e293b; --fg: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
+    main { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+    .card { background: var(--card); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; }
+    input, button { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid #334155; background: #0b1220; color: var(--fg); }
+    button { background: var(--accent); color: #0b1220; font-weight: 600; border: 0; cursor: pointer; }
+    li.done { color: var(--muted); text-decoration: line-through; }
+    small { color: var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <h1 id="title">Catlab Bro</h1>
+  <div class="card" id="login">
+    <p>Sign in with the app login.</p>
+    <p><input id="email" type="email" placeholder="email"> <input id="password" type="password" placeholder="password"></p>
+    <button id="signin">Sign in</button> <small id="err"></small>
+  </div>
+  <div class="card" id="notes" hidden>
+    <p><input id="new" placeholder="New note" size="30"> <button id="add">Add</button> <button id="out">Sign out</button></p>
+    <ul id="list"></ul>
+  </div>
+  <small><a href="./_setup/">Setup</a> · UI <span id="ver"></span></small>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id)
+  $("ver").textContent = document.querySelector('meta[name="ui-version"]').content
+  let auth = JSON.parse(localStorage.getItem("app_auth") || "null")
+  const api = (path, opts = {}) => fetch("./api/" + path, { ...opts,
+    headers: { "Content-Type": "application/json", ...(auth ? { Authorization: auth.token } : {}) } })
+  async function load() {
+    $("login").hidden = !!auth; $("notes").hidden = !auth
+    if (!auth) return
+    const r = await api("collections/notes/records?sort=-created&perPage=100")
+    if (r.status === 401) { auth = null; localStorage.removeItem("app_auth"); return load() }
+    const items = (await r.json()).items || []
+    $("list").innerHTML = ""
+    for (const n of items) {
+      const li = document.createElement("li"); li.textContent = n.title; if (n.done) li.className = "done"
+      li.onclick = async () => { await api("collections/notes/records/" + n.id, { method: "PATCH", body: JSON.stringify({ done: !n.done }) }); load() }
+      $("list").appendChild(li)
+    }
+  }
+  $("signin").onclick = async () => {
+    const r = await api("collections/users/auth-with-password", { method: "POST",
+      body: JSON.stringify({ identity: $("email").value, password: $("password").value }) })
+    if (!r.ok) return ($("err").textContent = "Sign-in refused")
+    auth = await r.json(); localStorage.setItem("app_auth", JSON.stringify(auth)); load()
+  }
+  $("add").onclick = async () => {
+    if (!$("new").value) return
+    await api("collections/notes/records", { method: "POST", body: JSON.stringify({ owner: auth.record.id, title: $("new").value }) })
+    $("new").value = ""; load()
+  }
+  $("out").onclick = () => { auth = null; localStorage.removeItem("app_auth"); load() }
+  fetch("./api/health").then((r) => r.json()).then(() => {}).catch(() => {})
+  load()
+</script>
+</body>
+</html>

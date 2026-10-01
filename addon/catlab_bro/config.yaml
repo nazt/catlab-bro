@@ -19,6 +19,8 @@ panel_title: Catlab Bro
 watchdog: http://[HOST]:[PORT:8090]/api/health
 # The panel's "Apply migrations" asks the Supervisor to restart this add-on (/addons/self/restart).
 hassio_api: true
+# A Home Assistant notification when a newer app UI release is out (pb_hooks/lib/uiupdate.js).
+homeassistant_api: true
 # Drop-in migrations and hooks: /addon_configs/<this add-on>/pb_migrations, …/pb_hooks on the host
 # (Samba or File editor add-on) = /config here; merged on every start (scripts/merge-extra.sh).
 map:
@@ -35,6 +37,8 @@ options:
   app_email: app@example.invalid
   auto_login: true
   ha_user_ids: ""
+  ui_repo: ""
+  ui_version: latest
 schema:
   admin_email: email
   app_email: email
@@ -44,3 +48,7 @@ schema:
   auto_login: bool
   # Optional: comma-separated Home Assistant user ids allowed to auto-login (empty: any).
   ha_user_ids: str?
+  # The app UI served at "/": owner/repo whose releases carry dist.zip (empty: this repository).
+  ui_repo: str?
+  # latest | a release tag (ui-v0.1.0) | a full dist.zip URL | bundled (no app UI)
+  ui_version: str?

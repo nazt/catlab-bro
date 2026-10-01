@@ -110,6 +110,14 @@ merged by `scripts/merge-extra.sh` on every start. When you turn such a file int
 project, move it into `pocketbase/pb_migrations/` (keep its name) and regenerate
 `collections.json`; never edit `addon/<slug>/rootfs/`.
 
+## The app UI
+
+`ui/` is the app's web UI, published by `.github/workflows/ui-release.yml` as release
+`ui-v<ui/VERSION>` (dist.zip) and served at `/` by the add-on. Replace it with the project's real
+UI if it has one (any framework: build to static files, `index.html` at the zip root, relative
+URLs only, keep `<meta name="ui-version" content="%UI_VERSION%">`). Bump `ui/VERSION` to release.
+Do not put the admin page there: it lives at `/_setup/` (pocketbase/pb_public).
+
 ## Definition of done
 
 All of these, with output you have actually seen:

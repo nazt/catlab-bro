@@ -170,6 +170,22 @@ result $? "migrations: once committed under the same name it shows as in the rep
 
 stop
 
+# --- 2d. app UI at "/" (ui/ as a release would ship it), the landing page at /_setup/ -----------
+uidir="$tmp/ui"; mkdir -p "$uidir/current"; cp -R "$here/ui/." "$uidir/current/"; rm -f "$uidir/current/VERSION"
+tag="ui-v$(tr -d ' \n' < "$here/ui/VERSION")"
+sed "s/%UI_VERSION%/$tag/" "$here/ui/index.html" > "$uidir/current/index.html"
+cp -R "$here/pocketbase/pb_public" "$uidir/current/_setup"
+UI_DIR="$uidir" UI_REPO=example/repo UI_CHANNEL="$tag" \
+  "$pb" serve --dir "$data" --migrationsDir "$tmp/run/pb_migrations" --hooksDir "$here/pocketbase/pb_hooks" \
+  --publicDir "$uidir/current" --http "127.0.0.1:$port" > "$tmp/serve-ui.log" 2>&1 &
+pid=$!; wait_health
+curl -fs "$url/" | grep -q "name=\"ui-version\" content=\"$tag\""; result $? "ui: the app UI is served at / and carries its release tag"
+curl -fs "$url/_setup/" | grep -q 'api/app/ha-login'; result $? "ui: the landing page moves to /_setup/"
+curl -s "$url/api/app/ui" -H "Authorization: $atok" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["managed"] and d["installed"]==sys.argv[1] and d["channel"]==sys.argv[1] and not d["update"]' "$tag"
+result $? "ui: status reports the running release (pinned: no update offered)"
+[ "$(curl -s -o /dev/null -w '%{http_code}' "$url/api/app/ui")" = 401 ]; result $? "ui: status refused without a superuser session"
+stop
+
 # --- 3. same schema, hooks disabled ------------------------------------------------------------
 mkdir -p "$tmp/no-hooks"
 serve "$data" "$here/pocketbase/pb_migrations" "$tmp/no-hooks" "$tmp/serve-nohooks.log"; result $? "server starts (hooks disabled)"

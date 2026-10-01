@@ -37,6 +37,16 @@ URL), install, start, and read the **Log** tab for the logins.
   file name) and **Download**. Once the next version ships it as built-in, the drop-in is ignored
   and never runs twice. Locally, `compose.yaml` mounts `./extra` the same way.
 
+- **Your app's UI at `/`:** `ui/` holds an example web app (plain HTML, signs in with the app
+  login). The `ui-release` workflow publishes it as a GitHub release `ui-v<ui/VERSION>` with a
+  `dist.zip`; bump `ui/VERSION` to release. At every start the add-on loads the release named by
+  `ui_version` (`latest`, a tag, a full URL, or `bundled` for none) from `ui_repo` (default: this
+  repository) and serves it at `/`, so the sidebar panel opens your app. The admin page
+  (auto-login, setup QR, migrations) moves to **`/_setup/`**. While running, a newer release shows
+  up there (and as a Home Assistant notification) with **Update UI**, which swaps it in without a
+  restart; the previous build is kept as `old`. Replace `ui/` with any framework's build: the zip
+  needs `index.html` at its root and relative URLs (it runs under the ingress prefix).
+
 Details in [`addon/catlab_bro/DOCS.md`](../addon/catlab_bro/DOCS.md).
 
 ## On an existing PocketBase

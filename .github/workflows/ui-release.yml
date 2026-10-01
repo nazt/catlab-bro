@@ -1,0 +1,32 @@
+# Publishes the app UI (ui/) as a GitHub release `ui-v<ui/VERSION>` carrying dist.zip, which the
+# add-on loads at start (option ui_version: latest | a tag | a URL | bundled) and can swap in from
+# the panel without a restart. Bump ui/VERSION to release. Replace ui/ with your own app's build:
+# the zip must have index.html at its root and use relative URLs.
+name: ui-release
+
+on:
+  push:
+    branches: [main]
+    paths: ["ui/**", ".github/workflows/ui-release.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release ui-v<VERSION> (once per version)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="ui-v$(tr -d ' \n' < ui/VERSION)"
+          if gh release view "$tag" -R "$REPO" >/dev/null 2>&1; then echo "$tag already released"; exit 0; fi
+          mkdir -p dist && cp -R ui/. dist/ && rm -f dist/VERSION
+          sed -i "s/%UI_VERSION%/$tag/" dist/index.html
+          (cd dist && zip -qr ../dist.zip .)
+          gh release create "$tag" dist.zip -R "$REPO" --title "UI $tag" --notes "App UI $tag (dist.zip, loaded by the add-on)" --latest
