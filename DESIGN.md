@@ -26,17 +26,19 @@ editorial (Hallmark) · visitor mode Operate (Impeccable)
 ## Theme (custom · tuned)
 Physical scene: the owner, at home, in the evening, opens the panel inside Home Assistant's dark
 theme on a laptop or a phone. The ground is Home Assistant's own neutral dark (#121212 content,
-#1a1a1a bars), warmed by the minimum tint; never a blue-black slate, never pure black or white.
+#1a1a1a bars) at chroma 0, so the page sits flush in the panel; the warmth lives in the ink. Never
+a blue-black slate, never pure black or white. (A deliberate deviation from Hallmark's tint-every-
+neutral gate: the host's ground wins.)
 
 | token | value | role |
 |---|---|---|
-| `--color-paper` | `oklch(18.2% 0.005 85)` | ground (≈ #121212) |
-| `--color-paper-2` | `oklch(21.6% 0.005 85)` | quiet band: the update bar, inputs, skeletons (≈ #1a1a1a) |
+| `--color-paper` | `oklch(18.2% 0 0)` | ground (#121212) |
+| `--color-paper-2` | `oklch(21.6% 0 0)` | quiet band: the update bar, inputs, skeletons (#1a1a1a) |
 | `--color-ink` | `oklch(92% 0.014 85)` | text |
 | `--color-ink-2` | `oklch(74% 0.012 85)` | secondary text |
 | `--color-ink-3` | `oklch(62% 0.012 85)` | meta, colophon, state words at rest |
-| `--color-rule` | `oklch(31% 0.005 85)` | rules: 1px between entries, 2px between sections |
-| `--color-control` | `oklch(55% 0.006 85)` | control borders, link underlines, dotted leaders (3:1 on both grounds) |
+| `--color-rule` | `oklch(31% 0 0)` | rules: 1px between entries, 2px between sections |
+| `--color-control` | `oklch(55% 0 0)` | control borders, link underlines, dotted leaders (3:1 on both grounds) |
 | `--color-accent` | `oklch(76% 0.13 155)` | the only colour that means *press* (buttons, links that act) |
 | `--color-accent-hover` | `oklch(81% 0.12 155)` | the accent under the pointer |
 | `--color-accent-ink` | `oklch(22% 0.03 155)` | text on the accent |

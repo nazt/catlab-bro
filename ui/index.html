@@ -19,6 +19,7 @@
   <style>
     /* Hallmark · genre: editorial · macrostructure: 13 Index-First · design-system: DESIGN.md · designed-as-app
      * nav: N9 · footer: Ft4 · theme: custom (tuned) · contrast: pass (40–41) · slop: pass (42–45)
+ * deviation: gate 22 (neutrals at chroma 0): the ground is Home Assistant's own #121212 / #1a1a1a, the page sits flush in its panel; the ink carries the warmth
      * honest: pass (46) · chrome: pass (47) · tokens: pass (48) · responsive: pass (49) · icons: pass (30) · mobile: pass (34, 49, 50–57)
      * pre-emit critique: P4 H5 E4 S4 R5 V4 */
 
@@ -30,13 +31,13 @@
     /* tokens:start */
     :root {
       color-scheme: dark;
-      --color-paper: oklch(18.2% 0.005 85);
-      --color-paper-2: oklch(21.6% 0.005 85);
+      --color-paper: oklch(18.2% 0 0);
+      --color-paper-2: oklch(21.6% 0 0);
       --color-ink: oklch(92% 0.014 85);
       --color-ink-2: oklch(74% 0.012 85);
       --color-ink-3: oklch(62% 0.012 85);
-      --color-rule: oklch(31% 0.005 85);
-      --color-control: oklch(55% 0.006 85);
+      --color-rule: oklch(31% 0 0);
+      --color-control: oklch(55% 0 0);
       --color-accent: oklch(76% 0.13 155);
       --color-accent-hover: oklch(81% 0.12 155);
       --color-accent-ink: oklch(22% 0.03 155);
@@ -45,7 +46,7 @@
       --color-focus: oklch(86% 0.11 155);
       --color-selection: oklch(36% 0.02 85);
       --color-qr-plate: oklch(96% 0.008 85);
-      --color-qr-ink: oklch(18.2% 0.005 85);
+      --color-qr-ink: oklch(18.2% 0 0);
 
       --font-display: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
       --font-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
