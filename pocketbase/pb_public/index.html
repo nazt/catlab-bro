@@ -1,219 +1,672 @@
 <!doctype html>
 <!--
-  Landing page at "/" and the Home Assistant sidebar panel (ingress). Every URL here is relative,
-  so it works both at http://host:8090/ and under Home Assistant's /api/hassio_ingress/<token>/.
-  Inside Home Assistant it asks ./api/app/ha-login for an admin token (granted only through the
-  ingress proxy, see pb_hooks/lib/halogin.js), stores it where the PocketBase dashboard looks for
-  it, and opens the dashboard: signed in to Home Assistant = signed in to PocketBase.
-  PocketBase's own CSP forbids framing the dashboard; pb_hooks/app.pb.js relaxes it to
-  frame-ancestors 'self', so in the panel the dashboard opens right here (↗ = its own tab).
+  The admin page: "/" (no app UI) or "/_setup/" (an app UI owns "/"), and the Home Assistant
+  sidebar panel (ingress). Every URL is relative, so it works both at http://host:<port>/ and under
+  /api/hassio_ingress/<token>/. Inside Home Assistant it asks ./api/app/ha-login for an admin
+  session (granted only through the ingress proxy, see pb_hooks/lib/halogin.js), stores it where
+  the PocketBase dashboard looks for it, and shows what this backend runs and needs.
+  Design system: DESIGN.md (the token block is shared with ui/index.html; local-e2e compares them).
 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PocketBase</title>
+  <meta name="color-scheme" content="dark">
+  <title>Catlab Bro · Setup</title>
+  <link rel="preload" href="./vendor/fonts/plex-sans-thai-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./vendor/fonts/plex-sans-thai-700.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root { color-scheme: light dark; --fg: #e5e7eb; --muted: #9ca3af; --bg: #111827; --card: #1f2937; --accent: #38bdf8; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--fg);
-           font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
-    main { background: var(--card); border-radius: 14px; padding: 28px 32px; width: min(460px, 90vw); }
-    h1 { margin: 0 0 4px; font-size: 20px; }
-    p { margin: 8px 0; color: var(--muted); }
-    a.button { display: inline-block; margin-top: 14px; padding: 9px 16px; border-radius: 9px; background: var(--accent);
-               color: #0b1220; font-weight: 600; text-decoration: none; }
-    code { font-size: 13px; }
-    #setup { display: none; margin-top: 18px; border-top: 1px solid #374151; padding-top: 14px; }
-    #qr svg { width: 180px; height: 180px; background: #fff; border-radius: 8px; padding: 6px; }
-    #setup code { word-break: break-all; }
-    button.copy { margin-left: 6px; font-size: 12px; }
-    #migrations { display: none; margin-top: 18px; border-top: 1px solid #374151; padding-top: 14px; }
-    #migrations li.pending { color: #fbbf24; }
-    #migrations li .warn { color: #f87171; }
-    #migrations li a { color: var(--accent); margin-left: 6px; }
-    #build { font-size: 13px; }
-    #build a { color: var(--accent); }
+    /* Hallmark · genre: editorial · macrostructure: 02 Long Document (release notes) · design-system: DESIGN.md · designed-as-app
+     * nav: N9 · footer: Ft4 · theme: custom (tuned) · contrast: pass (40–41) · slop: pass (42–45)
+     * honest: pass (46) · chrome: pass (47) · tokens: pass (48) · responsive: pass (49) · icons: pass (30) · mobile: pass (34, 49, 50–57)
+     * pre-emit critique: P5 H5 E4 S5 R4 V4 */
+
+    /* IBM Plex Sans Thai (Latin + Thai in one family) and IBM Plex Mono, self-hosted, unmodified; vendor/fonts/OFL.txt */
+    @font-face { font-family: "IBM Plex Sans Thai"; src: local("IBM Plex Sans Thai"), url("./vendor/fonts/plex-sans-thai-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+    @font-face { font-family: "IBM Plex Sans Thai"; src: local("IBM Plex Sans Thai Bold"), url("./vendor/fonts/plex-sans-thai-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+    @font-face { font-family: "IBM Plex Mono"; src: local("IBM Plex Mono"), url("./vendor/fonts/plex-mono-400-latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; unicode-range: U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022, U+2026, U+2030, U+2039-203A, U+2044, U+20AC, U+2122, U+2212, U+FB01-FB02; }
+
+    /* tokens:start */
+    :root {
+      color-scheme: dark;
+      --color-paper: oklch(18.2% 0.005 85);
+      --color-paper-2: oklch(21.6% 0.005 85);
+      --color-ink: oklch(92% 0.014 85);
+      --color-ink-2: oklch(74% 0.012 85);
+      --color-ink-3: oklch(62% 0.012 85);
+      --color-rule: oklch(31% 0.005 85);
+      --color-control: oklch(55% 0.006 85);
+      --color-accent: oklch(76% 0.13 155);
+      --color-accent-hover: oklch(81% 0.12 155);
+      --color-accent-ink: oklch(22% 0.03 155);
+      --color-unreleased: oklch(82% 0.13 80);
+      --color-danger: oklch(72% 0.15 28);
+      --color-focus: oklch(86% 0.11 155);
+      --color-selection: oklch(36% 0.02 85);
+      --color-qr-plate: oklch(96% 0.008 85);
+      --color-qr-ink: oklch(18.2% 0.005 85);
+
+      --font-display: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
+      --font-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
+      --font-mono: "IBM Plex Mono", "IBM Plex Sans Thai", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+      --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem;
+      --text-lg: 1.125rem; --text-xl: 1.375rem; --text-2xl: 1.75rem;
+
+      --space-3xs: 0.25rem; --space-2xs: 0.5rem; --space-xs: 0.75rem; --space-sm: 1rem;
+      --space-md: 1.5rem; --space-lg: 2rem; --space-xl: 3rem; --space-2xl: 4.5rem;
+
+      --page-gutter: var(--space-sm);
+      --measure: 62ch;
+      --control-height: 2.75rem;
+      --radius: 2px;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur-short: 150ms;
+    }
+    /* tokens:end */
+    @media (min-width: 48rem) { :root { --page-gutter: var(--space-lg); } }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { overflow-x: clip; }
+    html {
+      background: var(--color-paper);
+      scrollbar-color: var(--color-rule) var(--color-paper);
+      accent-color: var(--color-accent);
+      caret-color: var(--color-accent);
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+      color: var(--color-ink); font: 400 var(--text-md)/1.6 var(--font-body);
+      font-kerning: normal; text-rendering: optimizeLegibility;
+    }
+    ::selection { background: var(--color-selection); color: var(--color-ink); }
+    .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+    .icon { width: 1em; height: 1em; flex: none; vertical-align: -0.125em; }
+
+    /* ---- masthead (N9: name hard left, the one action hard right) ---- */
+    .masthead {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm);
+      min-height: 3.5rem; padding: var(--space-2xs) var(--page-gutter);
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .name {
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font: 700 var(--text-lg)/1.4 var(--font-display);
+    }
+    .masthead nav { display: flex; align-items: center; gap: var(--space-3xs); flex: none; }
+
+    /* ---- type ---- */
+    h1, h2 {
+      margin: 0; min-width: 0; overflow-wrap: anywhere; text-wrap: balance;
+      font-family: var(--font-display); font-weight: 700; font-style: normal; color: var(--color-ink);
+    }
+    h1 { font-size: var(--text-2xl); line-height: 1.3; letter-spacing: -0.01em; }
+    h2 { font-size: var(--text-xl); line-height: 1.3; }
+    p { margin: var(--space-xs) 0 0; max-width: var(--measure); color: var(--color-ink-2); text-wrap: pretty; }
+    h1 + p, h2 + p { margin-top: var(--space-2xs); }
+    .num { font-variant-numeric: lining-nums tabular-nums; }
+    code {
+      font-family: var(--font-mono); font-size: 0.875em; color: var(--color-ink);
+      font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+    }
+    .byline { margin-top: var(--space-3xs); font-size: var(--text-sm); color: var(--color-ink-3); }
+    .lede { color: var(--color-ink); }
+    .aside { font-size: var(--text-sm); color: var(--color-ink-3); }
+
+    /* ---- links: ink + hairline underline navigate; accent acts ---- */
+    a {
+      color: var(--color-ink); text-decoration-line: underline; text-decoration-thickness: 1px;
+      text-decoration-color: var(--color-control); text-underline-offset: 3px;
+      transition: color var(--dur-short) var(--ease-out), text-decoration-color var(--dur-short) var(--ease-out);
+    }
+    a:hover { text-decoration-color: currentColor; }
+    a:active { color: var(--color-ink-2); }
+    a:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius); }
+    a.act { color: var(--color-accent); text-decoration-color: var(--color-accent); }
+    a.act:hover { color: var(--color-accent-hover); }
+    a.link-pair { display: inline-flex; align-items: center; gap: var(--space-3xs); white-space: nowrap; }
+    .nav-link {
+      display: inline-flex; align-items: center; min-height: var(--control-height);
+      padding: 0 var(--space-2xs); white-space: nowrap; font-weight: 700;
+    }
+    /* the new-tab icon belongs to "Open dashboard": seated against it, 28 × 44 hit area, no box */
+    #open { padding-inline-end: 0; }
+    .icon-link {
+      display: inline-grid; place-items: center; width: 1.75rem; height: var(--control-height);
+      color: var(--color-ink-2); border-radius: var(--radius);
+    }
+    .icon-link:hover { color: var(--color-ink); }
+
+    /* ---- buttons: default · hover · focus-visible · active · disabled · loading · error · success ---- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2xs);
+      min-height: var(--control-height); padding: 0 var(--space-sm);
+      border: 1px solid transparent; border-radius: var(--radius);
+      font: 700 var(--text-sm)/1.3 var(--font-body); white-space: nowrap; cursor: pointer;
+      outline: 2px solid transparent; outline-offset: 2px;
+      transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out);
+    }
+    .btn.primary { background: var(--color-accent); color: var(--color-accent-ink); }
+    .btn.primary:hover { background: var(--color-accent-hover); }
+    .btn.secondary { background: transparent; color: var(--color-ink); border-color: var(--color-control); }
+    .btn.secondary:hover { background: var(--color-paper-2); border-color: var(--color-ink-3); }
+    .btn:focus-visible, input[type="file"]:focus-visible + .btn { outline-color: var(--color-focus); }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn[data-state="loading"] { opacity: 0.8; cursor: progress; }
+    .btn[data-state="error"] { background: transparent; color: var(--color-danger); border-color: var(--color-danger); }
+    .btn[data-state="success"] { background: transparent; color: var(--color-ink); border-color: var(--color-control); }
+
+    /* ---- inputs ---- */
+    .input {
+      min-width: 0; flex: 1; min-height: var(--control-height); padding: 0 var(--space-xs);
+      border: 1px solid var(--color-control); border-radius: var(--radius);
+      background: var(--color-paper-2); color: var(--color-ink);
+      font: 400 var(--text-sm)/1.3 var(--font-mono);
+      outline: 2px solid transparent; outline-offset: 1px;
+      transition: border-color var(--dur-short) var(--ease-out);
+    }
+    .input:hover { border-color: var(--color-ink-3); }
+    .input:focus-visible { outline-color: var(--color-focus); }
+    .input[aria-invalid="true"] { border-color: var(--color-danger); }
+    .input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* ---- state words ---- */
+    .state {
+      display: inline-block; white-space: nowrap; color: var(--color-ink-3);
+      font: 700 var(--text-xs)/1.3 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .state.is-pending { color: var(--color-unreleased); }
+    .states { display: inline-flex; flex-wrap: wrap; gap: var(--space-3xs) var(--space-2xs); }
+    .notice .state { margin-inline-end: 0.2em; }
+    .nowrap { white-space: nowrap; }
+
+    .status { color: var(--color-ink); min-height: 1lh; }
+    .status[data-tone="pending"] { color: var(--color-unreleased); }
+    .status[data-tone="error"] { color: var(--color-danger); }
+    .status:empty { margin-top: 0; min-height: 0; }
+
+    /* ---- the document ---- */
+    .doc { flex: 1; width: 100%; max-width: calc(46rem + 2 * var(--page-gutter)); padding: var(--space-lg) var(--page-gutter) var(--space-2xl); }
+    .doc > section + section { margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 2px solid var(--color-rule); }
+    .notice { color: var(--color-ink); }
+    .notice a { white-space: nowrap; }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2xs) var(--space-sm); margin-top: var(--space-sm); }
+    .consequence { font-size: var(--text-sm); color: var(--color-ink-3); white-space: nowrap; }
+
+    .entries { list-style: none; margin: var(--space-sm) 0 0; padding: 0; border-top: 1px solid var(--color-rule); }
+    .entries li {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline;
+      gap: var(--space-3xs) var(--space-sm); padding: var(--space-xs) 0; border-bottom: 1px solid var(--color-rule);
+    }
+    .entries .states { justify-self: end; }
+    .entries .entry-note { grid-column: 1 / -1; margin: 0; font-size: var(--text-sm); color: var(--color-ink-3); }
+    .entries .row-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2xs); margin-top: var(--space-3xs); }
+    .entries .empty { display: block; color: var(--color-ink-3); }
+    a.btn { text-decoration: none; }
+    .btn .icon { margin-inline-start: calc(-1 * var(--space-3xs)); }
+    /* quiet: a text-aligned button (no ghost padding to indent it when a row wraps) */
+    .btn.quiet { background: transparent; color: var(--color-ink-2); padding: 0; text-decoration: underline 1px var(--color-control); text-underline-offset: 3px; }
+    .btn.quiet:hover { color: var(--color-ink); text-decoration-color: currentColor; }
+    .entries .row-actions .btn.quiet { margin-inline-start: var(--space-xs); }
+    .actions .nav-link { padding-inline: 0; }
+    #mig-dir-note { margin-top: 0; }
+    .folder { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3xs) var(--space-xs); margin-top: var(--space-xs); }
+    .folder .consequence { white-space: nowrap; }
+    .folder code { min-width: 0; }
+
+    .app-card { display: grid; gap: var(--space-md); margin-top: var(--space-md); }
+    .qr {
+      margin: 0; width: 11rem; aspect-ratio: 1; padding: var(--space-2xs);
+      background: var(--color-qr-plate); border-radius: var(--radius);
+    }
+    .qr svg { display: block; width: 100%; height: 100%; }
+    .qr svg rect { fill: var(--color-qr-plate); }
+    .qr svg path { fill: var(--color-qr-ink); }
+    .facts { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-2xs) var(--space-sm); align-items: baseline; }
+    .facts dt { font-size: var(--text-sm); color: var(--color-ink-3); }
+    .facts dd { margin: 0; min-width: 0; }
+
+    .field { margin-top: var(--space-md); max-width: 34rem; }
+    .field label { display: block; margin-bottom: var(--space-3xs); font-weight: 700; font-size: var(--text-sm); color: var(--color-ink); }
+    .field-row { display: flex; align-items: center; gap: var(--space-2xs); }
+    .help { margin-top: var(--space-3xs); min-height: 1lh; font-size: var(--text-sm); color: var(--color-ink-3); }
+    .help[data-tone="error"] { color: var(--color-danger); }
+    .help code, .notice code, .consequence code, .byline code { white-space: nowrap; }
+
+    /* ---- colophon (Ft4) ---- */
+    .colophon {
+      border-top: 1px solid var(--color-rule); padding: var(--space-sm) var(--page-gutter) var(--space-md);
+      font: 400 var(--text-xs)/1.7 var(--font-body); color: var(--color-ink-3);
+    }
+    .colophon ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--space-md); }
+    .colophon li { white-space: nowrap; }
+    .colophon a { color: var(--color-ink-2); }
+    .colophon code { font-size: 0.92em; color: var(--color-ink-2); }
+    .when { margin-inline-start: var(--space-2xs); font: 400 var(--text-xs)/1.3 var(--font-mono); color: var(--color-ink-3); white-space: nowrap; }
+
+    @media (min-width: 40rem) {
+      .app-card { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+    }
+    @media (max-width: 30rem) {
+      .entries li { grid-template-columns: minmax(0, 1fr); }
+      .entries .states { justify-self: start; }
+      .facts { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .facts dd + dt { margin-top: var(--space-2xs); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; }
+      .btn:active { transform: none; }
+    }
   </style>
 </head>
 <body>
-<main>
-  <h1>PocketBase</h1>
-  <p id="status">Checking…</p>
-  <p id="build"></p>
-  <a class="button" id="open" href="./_/">Open dashboard</a>
-  <a class="button" id="tab" href="./_/" target="_blank" style="display:none; margin-left:8px">↗</a>
-  <p><code>API: <span id="api"></span></code></p>
-  <section id="setup">
-    <p><strong>Set up an app</strong>: scan, or copy the link. It holds the app login's password: share it only with your own devices.</p>
-    <div id="qr"></div>
-    <p><code id="setup-api"></code></p>
-    <p><code id="setup-login"></code></p>
-    <p><code id="setup-link"></code> <button class="copy" id="copy">Copy link</button></p>
+<!--
+  THESIS: This panel is the backend's own release notes: what runs, what is unreleased, what the app needs. It refuses the centred card of buttons.
+  OWN-WORLD: Ink-dark paper tuned to Home Assistant's dark panel, warm off-white IBM Plex Sans Thai, hairline rules; Plex Mono only for versions, hashes, paths and links; green means press, amber means unreleased.
+  STORY: The owner sees the running version and its commit, notices what exists only on this device, commits or applies it, hands an app its login, and moves the app UI.
+  FIRST VIEWPORT: Name hard left and Open dashboard hard right; "Running 0.1.8" as the heading with its commit and sign-in line; Unreleased below with its one action.
+  FORM: Release Notes, the user's pick over the dealt Card Catalogue (seed b54e97d7); Hallmark 02 Long Document.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-ext" viewBox="0 0 16 16"><path d="M6.5 3.5h-3v9h9v-3M9.5 3.5h3v3M12.5 3.5 7 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<header class="masthead">
+  <span class="name" id="name">Catlab Bro</span>
+  <nav aria-label="Dashboard">
+    <a class="nav-link" id="open" href="./_/">Open dashboard</a>
+    <a class="icon-link" id="tab" href="./_/" target="_blank" rel="noopener" title="Open the dashboard in a new tab" aria-label="Open the dashboard in a new tab" hidden><svg class="icon" aria-hidden="true"><use href="#i-ext"/></svg></a>
+  </nav>
+</header>
+
+<main class="doc">
+  <section aria-labelledby="h-running">
+    <h1 id="h-running">Checking the backend…</h1>
+    <p class="byline" id="byline" hidden></p>
+    <p class="status" id="status" role="status"></p>
+    <p class="notice" id="addon-update" hidden></p>
+    <p class="aside" id="api-line" hidden>API <code id="api"></code></p>
+    <div class="actions" id="retry-row" hidden><button class="btn secondary" type="button" id="retry">Check again</button></div>
   </section>
-  <section id="ui" style="display:none; margin-top:18px; border-top:1px solid #374151; padding-top:14px">
-    <p><strong>App UI</strong>: <span id="ui-line"></span></p>
-    <a class="button" id="ui-update" href="#" style="display:none">Update UI</a> <a href="#" id="ui-open">Open the app UI</a>
-    <p id="ui-status"></p>
+
+  <section id="unreleased" aria-labelledby="h-unreleased" hidden>
+    <h2 id="h-unreleased">Unreleased</h2>
+    <p class="lede">Migrations that exist only on this device. The repository is the source of truth: commit each one to <code>pocketbase/pb_migrations/</code> under the same name, and the next version ships it.</p>
+    <ul class="entries" id="mig-list"></ul>
+    <div class="actions" id="mig-apply-row" hidden>
+      <button class="btn primary" type="button" id="mig-apply">Apply migrations</button>
+      <span class="consequence">restarts the add-on</span>
+    </div>
+    <p class="status" id="mig-status" role="status"></p>
+    <div class="actions">
+      <input class="visually-hidden" type="file" id="mig-file" accept=".js,text/javascript">
+      <label class="btn secondary" for="mig-file" id="mig-upload">Upload a migration</label>
+      <span class="consequence">or drop <code>.js</code> files into the folder</span>
+    </div>
+    <div class="folder">
+      <span class="consequence">Folder</span>
+      <code id="mig-dir">pb_migrations</code>
+      <button class="btn quiet" type="button" id="mig-copy">Copy path</button>
+    </div>
+    <p class="aside" id="mig-dir-note" hidden>Open it with the Samba share or the File editor add-on.</p>
   </section>
-  <section id="migrations">
-    <p><strong>Migrations</strong>: drop <code>.js</code> files into <code id="mig-dir"></code><code>/pb_migrations</code>
-      (Home Assistant: <code>/addon_configs/&lt;this add-on&gt;/</code>, via Samba or File editor).</p>
-    <p>The repository is the source of truth: commit each drop-in to <code>pocketbase/pb_migrations/</code> under the
-      <strong>same name</strong> (the next version then ships it, and it is not run twice).</p>
-    <ul id="mig-list"></ul>
-    <p><label>Upload a migration: <input type="file" id="mig-file" accept=".js"></label></p>
-    <a class="button" id="mig-apply" href="#" style="display:none">Apply migrations (restarts)</a>
-    <p id="mig-status"></p>
+
+  <section id="setup" aria-labelledby="h-setup" hidden>
+    <h2 id="h-setup">Set up an app</h2>
+    <p class="lede">Scan the code with the app, or copy the link. It holds the app login's password: share it only with your own devices.</p>
+    <div class="app-card">
+      <figure class="qr" id="qr" role="img" aria-label="QR code of the app's setup link"></figure>
+      <div>
+        <dl class="facts">
+          <dt>API</dt><dd><code id="setup-api"></code></dd>
+          <dt>App login</dt><dd><code id="setup-login"></code></dd>
+          <dt>Setup link</dt><dd><code id="setup-link"></code></dd>
+        </dl>
+        <div class="actions"><button class="btn secondary" type="button" id="copy">Copy link</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ui" aria-labelledby="h-ui" hidden>
+    <h2 id="h-ui">App UI</h2>
+    <p class="notice" id="ui-line"></p>
+    <div class="actions" id="ui-actions">
+      <button class="btn primary" type="button" id="ui-update" hidden>Update</button>
+      <span class="consequence" id="ui-consequence" hidden>no restart</span>
+      <a class="nav-link" id="ui-open" href="../" hidden>Open the app</a>
+    </div>
+    <p class="status" id="ui-status" role="status"></p>
+    <form class="field" id="ui-source" novalidate>
+      <label for="ui-src">Source</label>
+      <div class="field-row">
+        <input class="input" id="ui-src" name="source" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="ui-src-help">
+        <button class="btn secondary" type="submit" id="ui-save">Save</button>
+      </div>
+      <p class="help" id="ui-src-help"><code>latest</code> follows new releases, a tag such as <code>ui-v0.1.0</code> pins one, a <code>dist.zip</code> URL loads that build, <code>bundled</code> serves no app UI.</p>
+    </form>
+    <div class="actions" id="ui-restart" hidden>
+      <button class="btn primary" type="button" id="ui-restart-btn">Restart now</button>
+      <span class="consequence">to serve the new source</span>
+    </div>
   </section>
 </main>
+
+<footer class="colophon">
+  <ul>
+    <li id="c-pb" hidden></li>
+    <li id="c-build" hidden></li>
+    <li id="c-repo" hidden></li>
+    <li id="c-who" hidden></li>
+  </ul>
+</footer>
+
 <script src="./vendor/qrcode-generator-1.4.4.js"></script>
 <script>
+  const $ = (id) => document.getElementById(id)
   // The app's root: this page is "/" (no app UI) or "/_setup/" (an app UI owns "/").
   const R = location.pathname.replace(/index\.html$/, "").replace(/_setup\/$/, "")
   const base = R.replace(/\/$/, "")
-  for (const id of ["open", "tab"]) document.getElementById(id).href = R + "_/"
-  document.getElementById("api").textContent = location.origin + base + "/api/"
-  const status = (t) => (document.getElementById("status").textContent = t)
   const framed = window.top !== window   // inside Home Assistant's sidebar panel
-  if (framed) document.getElementById("tab").style.display = "inline-block"
-  // the ingress URL is no use to apps (they need the published port, shown under "Set up an app")
-  if (framed) document.getElementById("api").parentElement.parentElement.style.display = "none"
+  const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms))
+  let token = ""
+  let info = Promise.resolve(null)   // GET api/app/info, shared by the build line and the drop-in folder
 
-  fetch(R + "api/app/ha-login", { credentials: "same-origin" })
-    .then(async (r) => {
-      if (!r.ok) {
-        const why = (await r.json().catch(() => ({}))).error || r.status
-        status(why === "auto-login is off" || r.status === 404
-          ? "Sign in to the dashboard with the admin login."
-          : "Not signed in automatically (" + why + "). Sign in to the dashboard with the admin login.")
-        return
-      }
-      const { token, record } = await r.json()
-      // The dashboard keeps its session under "__pb_superusers__" + its own path, without the
-      // trailing slash: e.g. "__pb_superusers__/api/hassio_ingress/<token>/_".
-      localStorage.setItem("__pb_superusers__" + base + "/_", JSON.stringify({ token, record, model: record }))
-      showSetup(token)
-      showMigrations(token)
-      showBuild(token)
-      showUI(token)
-      if (framed) {
-        status("Signed in through Home Assistant as " + record.email + ".")
-      } else {
-        status("Signed in through Home Assistant, opening the dashboard…")
-        location.replace(R + "_/")
-      }
-    })
-    .catch(() => status("PocketBase is not reachable yet. Reload in a moment."))
+  const api = (path, opts = {}) => fetch(R + "api/" + path, {
+    ...opts,
+    headers: { ...(token ? { Authorization: token } : {}), ...(opts.body ? { "Content-Type": "application/json" } : {}) },
+  })
+  const body = (r) => r.json().catch(() => ({}))
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n }
+  const code = (text) => el("code", "", text)
+  // a path breaks only after a "/" (never inside a name), e.g. /addon_configs/<slug>/pb_migrations
+  const pathCode = (text) => {
+    const c = el("code")
+    String(text).split("/").forEach((part, i, all) => { c.append(part + (i < all.length - 1 ? "/" : "")); if (i < all.length - 1) c.append(el("wbr")) })
+    return c
+  }
+  const day = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric" })
+  // 1790950000_add_cats.js -> the date in its name (PocketBase's own <unix timestamp>_<name>.js)
+  const dropDate = (name) => { const m = /^(\d{10})_/.exec(name); if (!m) return null; const d = new Date(Number(m[1]) * 1000); const t = el("time", "when", day.format(d)); t.dateTime = d.toISOString(); return t }
+  const state = (word, pending) => el("span", pending ? "state is-pending" : "state", word)
+  const ext = () => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    svg.setAttribute("class", "icon"); svg.setAttribute("aria-hidden", "true")
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use"); use.setAttribute("href", "#i-ext")
+    svg.append(use); return svg
+  }
+  const say = (id, text, tone) => { const n = $(id); n.textContent = text || ""; if (tone) n.dataset.tone = tone; else delete n.dataset.tone }
 
-  // The app's setup link and login, for superusers only (pb_hooks/lib/setup.js), as a QR code.
-  // The app UI (pb_hooks/lib/uiupdate.js): a GitHub release's dist.zip served at "/".
-  async function showUI(token) {
-    const auth = { headers: { Authorization: token } }
-    const r = await fetch(R + "api/app/ui?check=1", auth).catch(() => null)
-    if (!r || !r.ok) return
-    const u = await r.json()
-    if (!u.managed) return
-    document.getElementById("ui-line").textContent = "running " + (u.installed || "an unknown build") + " from " + u.repo +
-      (u.channel === "latest" ? (u.update ? " · " + u.latest + " is out" : " · up to date") : " · pinned to " + u.channel)
-    document.getElementById("ui-open").href = R
-    const btn = document.getElementById("ui-update")
-    btn.style.display = u.update ? "inline-block" : "none"
-    btn.onclick = async (ev) => {
-      ev.preventDefault()
-      document.getElementById("ui-status").textContent = "Updating to " + u.latest + "…"
-      const res = await fetch(R + "api/app/ui/update", { method: "POST", ...auth }).catch(() => null)
-      const out = res ? await res.json().catch(() => ({})) : {}
-      document.getElementById("ui-status").textContent = res && res.ok ? "Now running " + out.installed + "." : "Update failed: " + (out.error || "no answer")
-      showUI(token)
-    }
-    document.getElementById("ui").style.display = "block"
+  // A button's loading / error / success states, then back to its own label.
+  function busy(btn, label) {
+    btn.dataset.label = btn.dataset.label || btn.textContent
+    btn.dataset.state = "loading"; btn.setAttribute("aria-busy", "true"); btn.disabled = true; btn.textContent = label
+  }
+  function settle(btn, result, label) {
+    btn.dataset.label = btn.dataset.label || btn.textContent
+    btn.removeAttribute("aria-busy"); btn.disabled = false
+    if (result) btn.dataset.state = result; else delete btn.dataset.state
+    btn.textContent = label || btn.dataset.label
+    if (result === "success") setTimeout(() => settle(btn), 1500)
   }
 
-  // This build (version + git commit) and, in Home Assistant, a newer version of the add-on.
-  async function showBuild(token) {
-    const r = await fetch(R + "api/app/info", { headers: { Authorization: token } }).catch(() => null)
-    if (!r || !r.ok) return
-    const i = await r.json()
-    const el = document.getElementById("build")
-    el.textContent = "Running " + i.version + " · "
-    const c = document.createElement(i.repo && i.commit !== "dev" ? "a" : "span")
-    c.textContent = i.commit === "dev" ? "local build" : i.commit.slice(0, 7)
-    if (c.tagName === "A") { c.href = i.repo + "/commit/" + i.commit; c.target = "_blank"; c.rel = "noopener" }
-    el.append(c)
+  for (const id of ["open", "tab"]) $(id).href = R + "_/"
+  $("api").textContent = location.origin + base + "/api/"
+  if (framed) $("tab").hidden = false
+  // the ingress URL is no use to apps: in the panel, "Set up an app" shows the published port
+  else $("api-line").hidden = false
+
+  fetch(R + "api/app/about").then(body).then((a) => {
+    if (!a.name) return
+    $("name").textContent = a.name
+    document.title = a.name + " · Setup"
+  }).catch(() => {})
+
+  async function signIn() {
+    $("retry-row").hidden = true
+    let r
+    try { r = await fetch(R + "api/app/ha-login", { credentials: "same-origin" }) } catch (_) { r = null }
+    if (!r || r.status >= 500) {
+      $("h-running").textContent = "Not reachable yet"
+      say("status", "PocketBase is starting or stopped. Check again in a moment.", "pending")
+      $("retry-row").hidden = false
+      return
+    }
+    if (!r.ok) {
+      const why = (await body(r)).error || "HTTP " + r.status
+      $("h-running").textContent = "Sign in to the dashboard"
+      say("status", why === "auto-login is off" || r.status === 404
+        ? "Use the admin login. It was printed once in the add-on's log at the first start and is kept in /data/initial-credentials.txt."
+        : "Home Assistant did not sign you in (" + why + "). Use the admin login instead.")
+      return
+    }
+    const { token: t, record } = await r.json()
+    token = t
+    // The dashboard keeps its session under "__pb_superusers__" + its own path without the
+    // trailing slash: e.g. "__pb_superusers__/api/hassio_ingress/<token>/_".
+    localStorage.setItem("__pb_superusers__" + base + "/_", JSON.stringify({ token, record, model: record }))
+    if (!framed) {
+      say("status", "Signed in through Home Assistant. Opening the dashboard…")
+      location.replace(R + "_/")
+      return
+    }
+    say("status", "Signed in through Home Assistant as " + record.email + ".")
+    $("c-who").replaceChildren("signed in as ", code(record.email)); $("c-who").hidden = false
+    info = api("app/info").then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    showBuild(); showMigrations(); showSetup(); showUI()
+  }
+  $("retry").onclick = signIn
+  signIn()
+
+  // This build: version, the commit it was built from, and (in Home Assistant) a newer add-on.
+  async function showBuild() {
+    const i = await info
+    if (!i) { $("h-running").textContent = "Running"; return }
+    const h = $("h-running")
+    h.textContent = i.version === "dev" ? "Running a local build" : "Running "
+    if (i.version !== "dev") h.append(el("span", "num", i.version))
+    const by = $("byline"); by.textContent = ""
+    if (i.commit !== "dev") {
+      by.append("built from ")
+      const c = el(i.repo ? "a" : "span", i.repo ? "link-pair" : "", "")
+      c.append(code(i.commit.slice(0, 7)))
+      if (i.repo) { c.href = i.repo + "/commit/" + i.commit; c.target = "_blank"; c.rel = "noopener"; c.append(ext()) }
+      by.append(c)
+    }
+    if (i.pocketbase) by.append((by.childNodes.length ? " on " : "") + "PocketBase " + i.pocketbase)
+    by.hidden = !by.childNodes.length
     if (i.update && i.update.available) {
-      const u = document.createElement("a"); u.target = "_top"
-      u.href = "/config/app/" + i.update.slug + "/info"
-      u.textContent = " · update " + i.update.latest + " available: install it on the add-on page"
-      el.append(u)
+      const n = $("addon-update"); n.textContent = ""
+      const a = el("a", "act", "Install it on the add-on page")
+      a.href = "/config/app/" + i.update.slug + "/info"; a.target = "_top"
+      n.append(state("Available", true), " Version ", code(i.update.latest), " is out. ", a)
+      n.hidden = false
+    }
+    if (i.pocketbase) { $("c-pb").replaceChildren("PocketBase ", code(i.pocketbase)); $("c-pb").hidden = false }
+    $("c-build").replaceChildren("add-on ", code(i.version), ...(i.commit !== "dev" ? [" built from ", code(i.commit.slice(0, 7))] : []))
+    $("c-build").hidden = false
+    if (i.repo) {
+      const a = el("a"); a.append(code(i.repo.replace(/^https:\/\//, ""))); a.href = i.repo; a.target = "_blank"; a.rel = "noopener"
+      $("c-repo").replaceChildren(a); $("c-repo").hidden = false
     }
   }
 
-  // Drop-in migrations (pb_hooks/lib/migrations.js): pending files, and a restart that applies them.
-  async function showMigrations(token) {
-    const auth = { headers: { Authorization: token } }
-    const r = await fetch(R + "api/app/migrations", auth).catch(() => null)
+  // Ask Home Assistant to restart this add-on, wait for PocketBase to answer again, reload.
+  async function restart(btn, statusId, what) {
+    busy(btn, "Restarting…")
+    const res = await api("app/restart", { method: "POST" }).catch(() => null)   // the restart may cut this short
+    if (res && res.status === 501) { settle(btn, "error"); return say(statusId, (await body(res)).error, "error") }
+    if (res && !res.ok) { settle(btn, "error", "Try again"); return say(statusId, "Not restarted: " + ((await body(res)).error || "HTTP " + res.status), "error") }
+    say(statusId, "Restarting " + what + "…", "pending")
+    await sleep(4000)
+    for (let i = 0; i < 60; i++) {
+      const h = await fetch(R + "api/health").catch(() => null)
+      if (h && h.ok) return location.reload()
+      await sleep(2000)
+    }
+    settle(btn, "error", "Still restarting")
+    say(statusId, "Still restarting. Reload this page in a moment.", "pending")
+  }
+
+  // Drop-in migrations (pb_hooks/lib/migrations.js): what exists only here, and a restart that applies it.
+  async function showMigrations() {
+    const r = await api("app/migrations").catch(() => null)
     if (!r || !r.ok) return
     const m = await r.json()
     if (!m.dir) return
-    document.getElementById("mig-dir").textContent = m.dir
-    const list = document.getElementById("mig-list")
-    list.innerHTML = ""
+    // where the owner finds the files: Home Assistant's /addon_configs/<this add-on> (Samba, File
+    // editor), not the container's own /config
+    const i = await info
+    const slug = i && i.update && i.update.slug
+    const folder = slug ? "/addon_configs/" + slug + "/pb_migrations" : m.dir + "/pb_migrations"
+    $("mig-dir").replaceChildren(...pathCode(folder).childNodes)
+    $("mig-dir-note").hidden = !slug
+    const copyPath = $("mig-copy")
+    copyPath.onclick = async () => {
+      try { await navigator.clipboard.writeText(folder); settle(copyPath, "success", "Copied") }
+      catch (_) { settle(copyPath, "error", "Copy failed"); setTimeout(() => settle(copyPath), 2500) }
+    }
+    const list = $("mig-list"); list.textContent = ""
     for (const f of m.files) {
-      const li = document.createElement("li")
-      li.textContent = (f.applied || f.in_repo ? "✓ " : "• ") + f.name + (f.applied || f.in_repo ? "" : "  (pending)")
-      if (!f.applied && !f.in_repo) li.className = "pending"
+      const li = el("li")
+      const words = el("span", "states")
+      const head = el("span"); head.append(code(f.name)); const when = dropDate(f.name); if (when) head.append(when)
+      li.append(head, words)
       if (f.in_repo) {
-        li.append(" · in the repo now: you can delete this drop-in")
+        words.append(state("In the repo"))
+        const note = el("p", "entry-note", "Shipped by the add-on now. You can delete the drop-in: ")
+        note.append(pathCode(folder + "/" + f.name))
+        li.append(note)
       } else {
-        const warn = document.createElement("span"); warn.className = "warn"; warn.textContent = " · not in the repo yet"
-        li.append(warn)
-        if (f.commit_url) { const a = document.createElement("a"); a.href = f.commit_url; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Commit to repo ↗"; li.append(a) }
-        const dl = document.createElement("a"); dl.textContent = "Download"; dl.download = f.name
-        dl.href = URL.createObjectURL(new Blob([f.content], { type: "text/javascript" })); li.append(dl)
+        words.append(f.applied ? state("Applied") : state("Pending", true), state("Not in the repo", true))
+        const acts = el("div", "row-actions")
+        if (f.commit_url) {
+          const a = el("a", "btn secondary", "Commit to repo"); a.href = f.commit_url; a.target = "_blank"; a.rel = "noopener"; a.append(ext())
+          acts.append(a)
+        }
+        const dl = el("a", "btn quiet", "Download"); dl.download = f.name
+        dl.href = URL.createObjectURL(new Blob([f.content || ""], { type: "text/javascript" }))
+        acts.append(dl)
+        if (!f.commit_url) acts.append(el("span", "consequence", "too long for a prefilled commit: download it and commit it by hand"))
+        li.append(acts)
       }
-      list.appendChild(li)
+      list.append(li)
     }
-    if (!m.files.length) list.innerHTML = "<li>No drop-in migrations yet.</li>"
-    const apply = document.getElementById("mig-apply")
-    apply.style.display = m.pending ? "inline-block" : "none"
-    apply.onclick = async (ev) => {
-      ev.preventDefault()
-      const say = (t) => (document.getElementById("mig-status").textContent = t)
-      const res = await fetch(R + "api/app/restart", { method: "POST", ...auth }).catch(() => null)
-      if (res && res.status === 501) return say((await res.json()).error)
-      say("Restarting to apply " + m.pending + " migration(s)…")
-      await new Promise((ok) => setTimeout(ok, 4000))
-      for (let i = 0; i < 60; i++) {   // back up when health answers again
-        const h = await fetch(R + "api/health").catch(() => null)
-        if (h && h.ok) return location.reload()
-        await new Promise((ok) => setTimeout(ok, 2000))
-      }
-      say("Still restarting: reload this page in a moment.")
+    if (!m.files.length) {
+      const li = el("li"); li.append(el("span", "empty", "Nothing unreleased: every migration this backend runs is in the repository."))
+      list.append(li)
     }
-    document.getElementById("mig-file").onchange = async (ev) => {
+    const apply = $("mig-apply")
+    $("mig-apply-row").hidden = !m.pending
+    apply.textContent = apply.dataset.label = m.pending === 1 ? "Apply 1 migration" : "Apply " + m.pending + " migrations"
+    apply.onclick = () => restart(apply, "mig-status", "to apply " + (m.pending === 1 ? "the migration" : "the migrations"))
+    $("mig-file").onchange = async (ev) => {
       const file = ev.target.files[0]; if (!file) return
-      const res = await fetch(R + "api/app/migrations", { method: "POST",
-        headers: { Authorization: token, "Content-Type": "application/json" },
-        body: JSON.stringify({ name: file.name, content: await file.text() }) })
-      const out = await res.json().catch(() => ({}))
-      document.getElementById("mig-status").textContent = res.ok ? "Uploaded " + out.name + "." : "Not uploaded: " + out.error
-      if (res.ok) showMigrations(token)
+      const label = $("mig-upload"); label.dataset.state = "loading"; label.textContent = "Uploading…"; ev.target.disabled = true
+      const res = await api("app/migrations", { method: "POST", body: JSON.stringify({ name: file.name, content: await file.text() }) }).catch(() => null)
+      const out = res ? await body(res) : {}
+      ev.target.disabled = false; ev.target.value = ""; label.textContent = "Upload a migration"; delete label.dataset.state
+      if (res && res.ok) {
+        say("mig-status", "Uploaded " + out.name + ". It is pending: apply it when you are ready.")
+        showMigrations()
+      } else {
+        label.dataset.state = "error"
+        say("mig-status", "Not uploaded: " + (out.error || "the backend did not answer"), "error")
+      }
     }
-    document.getElementById("migrations").style.display = "block"
+    $("unreleased").hidden = false
   }
 
-  async function showSetup(token) {
-    const r = await fetch(R + "api/app/setup", { headers: { Authorization: token } }).catch(() => null)
+  // The app's setup link and login (pb_hooks/lib/setup.js), as a QR code.
+  async function showSetup() {
+    const r = await api("app/setup").catch(() => null)
     if (!r || !r.ok) return
     const s = await r.json()
     const qr = qrcode(0, "M"); qr.addData(s.link); qr.make()
-    document.getElementById("qr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true })
-    document.getElementById("setup-api").textContent = "API: " + s.api
-    document.getElementById("setup-login").textContent = "App login: " + s.app_email
-    document.getElementById("setup-link").textContent = s.link.replace(/([?&]p=)[^&]*/, "$1•••••")
-    document.getElementById("copy").onclick = () => navigator.clipboard.writeText(s.link)
-    document.getElementById("setup").style.display = "block"
+    $("qr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true })
+    $("setup-api").textContent = s.api
+    $("setup-login").textContent = s.app_email
+    $("setup-link").textContent = s.link.replace(/\?.*$/, "?u=…&e=…&p=•••••")
+    const copy = $("copy")
+    copy.onclick = async () => {
+      try { await navigator.clipboard.writeText(s.link); settle(copy, "success", "Copied") }
+      catch (_) { settle(copy, "error", "Copy failed") ; setTimeout(() => settle(copy), 2500) }
+    }
+    $("setup").hidden = false
   }
+
+  // The app UI (pb_hooks/lib/uiupdate.js): which release runs, which is out, and where it comes from.
+  const SOURCE = /^(latest|bundled|(ui-)?v\d+\.\d+\.\d+([.-][0-9A-Za-z.-]+)?|https?:\/\/[A-Za-z0-9._~:\/?#\[\]@!$&()*+,;=%-]+)$/
+  function renderUI(u) {
+    const line = $("ui-line"); line.textContent = ""
+    if (u.managed) {
+      line.append("Running ", code(u.installed || "an unknown build"), " from ", code(u.repo), " ")
+      const tail = el("span", "nowrap")
+      if (u.update) tail.append(state("Available", true), " ", code(u.latest), " is out.")
+      else tail.append(state(u.channel === "latest" ? "Up to date" : "Pinned"))
+      line.append(tail)
+    } else {
+      line.append(u.channel === "bundled" || !u.channel
+        ? "No app UI is served: the panel opens on this page. To serve your app, set the source to latest or a release tag."
+        : "Not loaded: " + u.channel + " could not be loaded at the last start. The add-on's log says why.")
+    }
+    const upd = $("ui-update")
+    upd.hidden = $("ui-consequence").hidden = !u.update
+    if (u.update) upd.textContent = upd.dataset.label = "Update to " + u.latest
+    $("ui-open").hidden = !u.managed
+    $("ui-open").href = R
+    const src = $("ui-src")
+    if (document.activeElement !== src) src.value = u.channel || "bundled"
+    src.disabled = $("ui-save").disabled = !u.editable
+    if (!u.editable) say("ui-src-help", "Outside Home Assistant: set UI_VERSION for the container and restart it.")
+    $("ui-restart").hidden = !u.restart
+    $("ui").hidden = false
+  }
+  async function showUI() {
+    const r = await api("app/ui?check=1").catch(() => null)
+    if (!r || !r.ok) return
+    renderUI(await r.json())
+  }
+  $("ui-update").onclick = async () => {
+    const btn = $("ui-update")
+    busy(btn, "Updating…")
+    const res = await api("app/ui/update", { method: "POST" }).catch(() => null)
+    const out = res ? await body(res) : {}
+    if (res && res.ok) { say("ui-status", "Now running " + out.installed + "."); settle(btn); renderUI(out) }
+    else { settle(btn, "error", "Try again"); say("ui-status", "Update failed: " + (out.error || "the backend did not answer"), "error") }
+  }
+  $("ui-src").oninput = () => { $("ui-src").removeAttribute("aria-invalid"); delete $("ui-src-help").dataset.tone }
+  $("ui-source").onsubmit = async (ev) => {
+    ev.preventDefault()
+    const src = $("ui-src"), save = $("ui-save"), help = $("ui-src-help")
+    const source = src.value.trim()
+    if (!SOURCE.test(source)) {
+      src.setAttribute("aria-invalid", "true")
+      help.dataset.tone = "error"
+      help.textContent = "Use latest, a release tag such as ui-v0.1.0, a dist.zip URL, or bundled."
+      return src.focus()
+    }
+    busy(save, "Saving…")
+    say("ui-status", source === "bundled" || $("ui-open").hidden ? "Saving…" : "Loading " + source + "…", "pending")
+    const res = await api("app/ui/source", { method: "POST", body: JSON.stringify({ source }) }).catch(() => null)
+    const out = res ? await body(res) : {}
+    if (res && res.ok) {
+      settle(save, "success", "Saved")
+      renderUI(out)
+      say("ui-status", out.restart ? "Saved. It takes effect when the add-on restarts." : "Saved. Now running " + (out.installed || source) + ".")
+    } else {
+      settle(save, "error", "Try again")
+      say("ui-status", "Not saved: " + (out.error || "the backend did not answer"), "error")
+    }
+  }
+  $("ui-restart-btn").onclick = () => restart($("ui-restart-btn"), "ui-status", "to serve the new source")
 </script>
 </body>
 </html>

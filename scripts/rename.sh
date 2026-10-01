@@ -49,8 +49,11 @@ esc_old="$(printf '%s' "$old_name" | sed 's/[.[\*^$/]/\\&/g')"
 sub README.md -e "1s|^# .*|# $name|" -e "s|$esc_old|$name|g"
 for d in docs/*.md; do [ -f "$d" ] && sub "$d" -e "s|$esc_old|$name|g" -e "s|addon/$old_slug/|addon/$slug/|g"; done
 sub "$a/DOCS.md" -e "1s|^# .*|# $name|" -e "s|$esc_old|$name|g"
+# the name the admin page and the example app show before they ask the backend (/api/app/about)
+for f in pocketbase/pb_public/index.html ui/index.html; do sub "$f" -e "s|$esc_old|$name|g"; done
+[ -f DESIGN.md ] && sub DESIGN.md -e "1s|^# Design — .*|# Design — $name|"
 printf '# Changelog\n\n## 0.1.0\n\n- First version of %s, from the PocketBase backend template.\n' "$name" > "$a/CHANGELOG.md"
-changed+=("$a/config.yaml" "$a/Dockerfile (labels)" "$a/DOCS.md" "$a/CHANGELOG.md" repository.yaml compose.yaml "README.md (title)" "docs/*.md (name, add-on path)")
+changed+=("$a/config.yaml" "$a/Dockerfile (labels)" "$a/DOCS.md" "$a/CHANGELOG.md" repository.yaml compose.yaml "README.md (title)" "docs/*.md (name, add-on path)" "pocketbase/pb_public/index.html + ui/index.html (name)")
 
 scripts/sync-addon.sh >/dev/null
 changed+=("$a/rootfs (synced)")

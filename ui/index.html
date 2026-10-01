@@ -4,73 +4,402 @@
   GitHub release by .github/workflows/ui-release.yml. Plain HTML + fetch, no build step: replace it
   with your own app (any framework) as long as the release carries a dist.zip with index.html at
   its root and relative URLs (it runs under Home Assistant's ingress prefix too).
-  The release workflow fills in the version below.
+  The release workflow fills in the version below. Design system: DESIGN.md (the token block is
+  shared with pocketbase/pb_public/index.html; local-e2e compares them).
 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <meta name="ui-version" content="%UI_VERSION%">
   <title>Catlab Bro</title>
+  <link rel="preload" href="./fonts/plex-sans-thai-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./fonts/plex-sans-thai-700.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root { color-scheme: light dark; --bg: #0f172a; --card: #1e293b; --fg: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; }
-    body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
-    main { max-width: 640px; margin: 40px auto; padding: 0 16px; }
-    .card { background: var(--card); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; }
-    input, button { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid #334155; background: #0b1220; color: var(--fg); }
-    button { background: var(--accent); color: #0b1220; font-weight: 600; border: 0; cursor: pointer; }
-    li.done { color: var(--muted); text-decoration: line-through; }
-    small { color: var(--muted); }
+    /* Hallmark · genre: editorial · macrostructure: 13 Index-First · design-system: DESIGN.md · designed-as-app
+     * nav: N9 · footer: Ft4 · theme: custom (tuned) · contrast: pass (40–41) · slop: pass (42–45)
+     * honest: pass (46) · chrome: pass (47) · tokens: pass (48) · responsive: pass (49) · icons: pass (30) · mobile: pass (34, 49, 50–57)
+     * pre-emit critique: P4 H5 E4 S4 R5 V4 */
+
+    /* IBM Plex Sans Thai (Latin + Thai in one family) and IBM Plex Mono, self-hosted, unmodified; fonts/OFL.txt */
+    @font-face { font-family: "IBM Plex Sans Thai"; src: local("IBM Plex Sans Thai"), url("./fonts/plex-sans-thai-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+    @font-face { font-family: "IBM Plex Sans Thai"; src: local("IBM Plex Sans Thai Bold"), url("./fonts/plex-sans-thai-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+    @font-face { font-family: "IBM Plex Mono"; src: local("IBM Plex Mono"), url("./fonts/plex-mono-400-latin1.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; unicode-range: U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022, U+2026, U+2030, U+2039-203A, U+2044, U+20AC, U+2122, U+2212, U+FB01-FB02; }
+
+    /* tokens:start */
+    :root {
+      color-scheme: dark;
+      --color-paper: oklch(18.2% 0.005 85);
+      --color-paper-2: oklch(21.6% 0.005 85);
+      --color-ink: oklch(92% 0.014 85);
+      --color-ink-2: oklch(74% 0.012 85);
+      --color-ink-3: oklch(62% 0.012 85);
+      --color-rule: oklch(31% 0.005 85);
+      --color-control: oklch(55% 0.006 85);
+      --color-accent: oklch(76% 0.13 155);
+      --color-accent-hover: oklch(81% 0.12 155);
+      --color-accent-ink: oklch(22% 0.03 155);
+      --color-unreleased: oklch(82% 0.13 80);
+      --color-danger: oklch(72% 0.15 28);
+      --color-focus: oklch(86% 0.11 155);
+      --color-selection: oklch(36% 0.02 85);
+      --color-qr-plate: oklch(96% 0.008 85);
+      --color-qr-ink: oklch(18.2% 0.005 85);
+
+      --font-display: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
+      --font-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", sans-serif;
+      --font-mono: "IBM Plex Mono", "IBM Plex Sans Thai", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+      --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem;
+      --text-lg: 1.125rem; --text-xl: 1.375rem; --text-2xl: 1.75rem;
+
+      --space-3xs: 0.25rem; --space-2xs: 0.5rem; --space-xs: 0.75rem; --space-sm: 1rem;
+      --space-md: 1.5rem; --space-lg: 2rem; --space-xl: 3rem; --space-2xl: 4.5rem;
+
+      --page-gutter: var(--space-sm);
+      --measure: 62ch;
+      --control-height: 2.75rem;
+      --radius: 2px;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur-short: 150ms;
+    }
+    /* tokens:end */
+    @media (min-width: 48rem) { :root { --page-gutter: var(--space-lg); } }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { overflow-x: clip; }
+    html {
+      background: var(--color-paper);
+      scrollbar-color: var(--color-rule) var(--color-paper);
+      accent-color: var(--color-accent);
+      caret-color: var(--color-accent);
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+      color: var(--color-ink); font: 400 var(--text-md)/1.6 var(--font-body);
+      font-kerning: normal; text-rendering: optimizeLegibility;
+    }
+    ::selection { background: var(--color-selection); color: var(--color-ink); }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+
+    /* ---- masthead (N9) ---- */
+    .masthead {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm);
+      min-height: 3.5rem; padding: var(--space-2xs) var(--page-gutter);
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 var(--text-lg)/1.4 var(--font-display); }
+
+    /* ---- update bar: a newer app UI is out ---- */
+    .update-bar {
+      margin: 0; padding: var(--space-xs) var(--page-gutter);
+      background: var(--color-paper-2); border-bottom: 1px solid var(--color-rule); color: var(--color-ink);
+      font-size: var(--text-sm);
+    }
+    .update-bar { max-width: none; }
+    .update-bar .state { margin-inline-end: var(--space-2xs); }
+    .update-bar code { white-space: nowrap; }
+
+    /* ---- type ---- */
+    h1 {
+      margin: 0; min-width: 0; overflow-wrap: anywhere; text-wrap: balance;
+      font: 700 var(--text-2xl)/1.3 var(--font-display); font-style: normal; letter-spacing: -0.01em;
+    }
+    p { margin: var(--space-2xs) 0 0; max-width: var(--measure); color: var(--color-ink-2); text-wrap: pretty; }
+    code { font-family: var(--font-mono); font-size: 0.875em; color: var(--color-ink); overflow-wrap: anywhere; }
+    a {
+      color: var(--color-ink); text-decoration-line: underline; text-decoration-thickness: 1px;
+      text-decoration-color: var(--color-control); text-underline-offset: 3px;
+      transition: color var(--dur-short) var(--ease-out), text-decoration-color var(--dur-short) var(--ease-out);
+    }
+    a:hover { text-decoration-color: currentColor; }
+    a:active { color: var(--color-ink-2); }
+    a:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius); }
+    .state {
+      display: inline-block; white-space: nowrap; color: var(--color-ink-3);
+      font: 700 var(--text-xs)/1.3 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .state.is-pending { color: var(--color-unreleased); }
+
+    /* ---- buttons: default · hover · focus-visible · active · disabled · loading · error · success ---- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: var(--control-height); padding: 0 var(--space-sm);
+      border: 1px solid transparent; border-radius: var(--radius);
+      font: 700 var(--text-sm)/1.3 var(--font-body); white-space: nowrap; cursor: pointer;
+      outline: 2px solid transparent; outline-offset: 2px;
+      transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out);
+    }
+    .btn.primary { background: var(--color-accent); color: var(--color-accent-ink); }
+    .btn.primary:hover { background: var(--color-accent-hover); }
+    .btn.secondary { background: transparent; color: var(--color-ink); border-color: var(--color-control); }
+    .btn.secondary:hover { background: var(--color-paper-2); border-color: var(--color-ink-3); }
+    /* quiet: a text-aligned button (no ghost padding) */
+    .btn.quiet { background: transparent; color: var(--color-ink-2); padding: 0; text-decoration: underline 1px var(--color-control); text-underline-offset: 3px; }
+    .btn.quiet:hover { color: var(--color-ink); text-decoration-color: currentColor; }
+    .btn:focus-visible { outline-color: var(--color-focus); }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn[data-state="loading"] { opacity: 0.8; cursor: progress; }
+    .btn[data-state="error"] { background: transparent; color: var(--color-danger); border-color: var(--color-danger); }
+    .btn[data-state="success"] { background: transparent; color: var(--color-ink); border-color: var(--color-control); }
+
+    /* ---- inputs ---- */
+    .field { display: grid; gap: var(--space-3xs); }
+    .field label { font-weight: 700; font-size: var(--text-sm); }
+    .input {
+      min-width: 0; width: 100%; min-height: var(--control-height); padding: 0 var(--space-xs);
+      border: 1px solid var(--color-control); border-radius: var(--radius);
+      background: var(--color-paper-2); color: var(--color-ink); font: 400 var(--text-md)/1.3 var(--font-body);
+      outline: 2px solid transparent; outline-offset: 1px;
+      transition: border-color var(--dur-short) var(--ease-out);
+    }
+    .input::placeholder { color: var(--color-ink-3); }
+    .input:hover { border-color: var(--color-ink-3); }
+    .input:focus-visible { outline-color: var(--color-focus); }
+    .input[aria-invalid="true"] { border-color: var(--color-danger); }
+    .input:disabled { opacity: 0.55; cursor: not-allowed; }
+    .help { margin: 0; min-height: 1lh; font-size: var(--text-sm); color: var(--color-ink-3); }
+    .help[data-tone="error"] { color: var(--color-danger); }
+    .help code { white-space: nowrap; }
+    #login-error { color: var(--color-danger); }
+    #login-error:empty { min-height: 0; }
+
+    /* ---- the index ---- */
+    .page { flex: 1; width: 100%; max-width: calc(40rem + 2 * var(--page-gutter)); padding: var(--space-lg) var(--page-gutter) var(--space-2xl); }
+    .sign-in { display: grid; gap: var(--space-sm); max-width: 24rem; margin-top: var(--space-md); }
+    .add { display: flex; gap: var(--space-2xs); margin-top: var(--space-md); }
+    .add .help { margin-top: var(--space-3xs); }
+    .index { list-style: none; margin: var(--space-sm) 0 0; padding: 0; border-top: 1px solid var(--color-rule); }
+    .index li { border-bottom: 1px solid var(--color-rule); }
+    /* checkbox | title (its last line carries the dotted leader) | date, on the title's last line */
+    .entry {
+      display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: last baseline;
+      column-gap: var(--space-xs); min-height: var(--control-height); padding: var(--space-2xs) 0; cursor: pointer;
+    }
+    .entry input {
+      width: 1.125rem; height: 1.125rem; margin: 0.3rem 0 0; align-self: start; cursor: pointer;
+      accent-color: var(--color-ink-3);   /* done is a state, not a press: no green */
+      outline: 2px solid transparent; outline-offset: 2px;
+    }
+    .entry input:focus-visible { outline-color: var(--color-focus); }
+    .entry input:disabled { cursor: progress; }
+    .entry .body { position: relative; min-width: 0; }
+    /* the leader runs under the last line; the title's own paper hides it behind the words */
+    .entry .body::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0.5em; border-bottom: 1px dotted var(--color-control); }
+    .entry .title {
+      position: relative; z-index: 1; padding-inline-end: var(--space-2xs); overflow-wrap: anywhere;
+      background: var(--color-paper); color: var(--color-ink);
+      -webkit-box-decoration-break: clone; box-decoration-break: clone;
+    }
+    .entry time { font: 400 var(--text-sm)/1.3 var(--font-mono); color: var(--color-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .entry:hover .title { text-decoration: underline; text-decoration-color: var(--color-control); text-underline-offset: 3px; }
+    .entry.is-done .title { color: var(--color-ink-3); text-decoration: line-through; text-decoration-color: var(--color-ink-3); }
+    .skeleton li { height: var(--control-height); display: flex; align-items: center; }
+    .skeleton li::before { content: ""; display: block; width: 55%; height: 0.75rem; background: var(--color-paper-2); border-radius: var(--radius); }
+    .skeleton li:nth-child(2)::before { width: 40%; }
+    .skeleton li:nth-child(3)::before { width: 65%; }
+    .empty { color: var(--color-ink-3); }
+
+    /* ---- colophon (Ft4) ---- */
+    .colophon {
+      border-top: 1px solid var(--color-rule); padding: var(--space-sm) var(--page-gutter) var(--space-md);
+      font: 400 var(--text-xs)/1.7 var(--font-body); color: var(--color-ink-3);
+    }
+    .colophon ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--space-md); }
+    .colophon li { white-space: nowrap; }
+    .colophon a { color: var(--color-ink-2); }
+    .colophon code { font-size: 0.92em; color: var(--color-ink-2); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; }
+      .btn:active { transform: none; }
+    }
   </style>
 </head>
 <body>
-<main>
-  <h1 id="title">Catlab Bro</h1>
-  <div class="card" id="login">
-    <p>Sign in with the app login.</p>
-    <p><input id="email" type="email" placeholder="email"> <input id="password" type="password" placeholder="password"></p>
-    <button id="signin">Sign in</button> <small id="err"></small>
-  </div>
-  <div class="card" id="notes" hidden>
-    <p><input id="new" placeholder="New note" size="30"> <button id="add">Add</button> <button id="out">Sign out</button></p>
-    <p><small id="count"></small></p>
-    <ul id="list"></ul>
-  </div>
-  <small><a href="./_setup/">Setup</a> · UI <span id="ver"></span></small>
+<!--
+  THESIS: The records are the page: notes set as a typeset index, with nothing between the reader and them. It refuses the card stack of form, list and buttons.
+  OWN-WORLD: The admin page's paper and Plex Sans Thai (Thai and Latin alike), rows ruled in hairlines, dotted leaders to a mono date; green only to press, amber only for a newer build.
+  STORY: The app user signs in once, reads the index, adds a line, ticks one off; when a newer UI is out they learn that an admin installs it in Setup.
+  FIRST VIEWPORT: Name hard left, Sign out hard right; "Notes" with its count; the add field and its button; then the index rows.
+  FORM: Index-First under the Release Notes world (seed b54e97d7); Hallmark 13 Index-First.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+-->
+<header class="masthead">
+  <span class="name" id="name">Catlab Bro</span>
+  <button class="btn quiet" type="button" id="out" hidden>Sign out</button>
+</header>
+<p class="update-bar" id="update" role="status" hidden></p>
+
+<main class="page">
+  <section id="login" aria-labelledby="h-login" hidden>
+    <h1 id="h-login">Sign in</h1>
+    <p>Use the app login. An admin finds it in <a href="./_setup/">Setup</a>.</p>
+    <form class="sign-in" id="login-form" novalidate>
+      <div class="field">
+        <label for="email">Email</label>
+        <input class="input" id="email" type="email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input class="input" id="password" type="password" autocomplete="current-password" required>
+      </div>
+      <div><button class="btn primary" type="submit" id="signin">Sign in</button></div>
+      <p class="help" id="login-error" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="notes" aria-labelledby="h-notes" hidden>
+    <h1 id="h-notes">Notes</h1>
+    <p id="count">Loading…</p>
+    <form id="add-form" novalidate>
+      <div class="add">
+        <label class="visually-hidden" for="new">New note</label>
+        <input class="input" id="new" placeholder="A new note" autocomplete="off" maxlength="200">
+        <button class="btn primary" type="submit" id="add" disabled>Add</button>
+      </div>
+      <p class="help" id="add-error" role="alert"></p>
+    </form>
+    <ol class="index skeleton" id="skeleton" aria-hidden="true"><li></li><li></li><li></li></ol>
+    <ol class="index" id="list" aria-labelledby="h-notes" hidden></ol>
+    <p class="empty" id="empty" hidden>No notes yet. Write the first one above; tick it off when it is done.</p>
+    <p class="help" id="list-error" role="alert"></p>
+    <div id="retry-row" hidden><button class="btn secondary" type="button" id="retry">Load again</button></div>
+  </section>
 </main>
+
+<footer class="colophon">
+  <ul>
+    <li><a href="./_setup/">Setup</a></li>
+    <li>UI <code id="ver"></code></li>
+    <li id="who" hidden></li>
+  </ul>
+</footer>
+
 <script>
   const $ = (id) => document.getElementById(id)
-  $("ver").textContent = document.querySelector('meta[name="ui-version"]').content
+  const version = document.querySelector('meta[name="ui-version"]').content
+  $("ver").textContent = version.startsWith("%") ? "unreleased" : version
   let auth = JSON.parse(localStorage.getItem("app_auth") || "null")
   const api = (path, opts = {}) => fetch("./api/" + path, { ...opts,
     headers: { "Content-Type": "application/json", ...(auth ? { Authorization: auth.token } : {}) } })
-  async function load() {
-    $("login").hidden = !!auth; $("notes").hidden = !auth
-    if (!auth) return
-    const r = await api("collections/notes/records?sort=-created&perPage=100")
-    if (r.status === 401) { auth = null; localStorage.removeItem("app_auth"); return load() }
-    const items = (await r.json()).items || []
-    $("count").textContent = items.length + " note" + (items.length === 1 ? "" : "s") + " · tap one to mark it done"
-    $("list").innerHTML = ""
-    for (const n of items) {
-      const li = document.createElement("li"); li.textContent = n.title; if (n.done) li.className = "done"
-      li.onclick = async () => { await api("collections/notes/records/" + n.id, { method: "PATCH", body: JSON.stringify({ done: !n.done }) }); load() }
-      $("list").appendChild(li)
+  const body = (r) => r.json().catch(() => ({}))
+  const say = (id, text) => { $(id).textContent = text || "" }
+  const day = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" })
+
+  // The project's name, and a newer app UI if one is out (installing it is an admin's job, in Setup).
+  fetch("./api/app/about").then(body).then((a) => {
+    if (a.name) { $("name").textContent = a.name; document.title = a.name }
+    if (a.ui && a.ui.update) {
+      const bar = $("update"); bar.textContent = ""
+      const s = document.createElement("span"); s.className = "state is-pending"; s.textContent = "Available"
+      const link = document.createElement("a"); link.href = "./_setup/"; link.textContent = "Setup"
+      const tag = document.createElement("code"); tag.textContent = a.ui.latest
+      bar.append(s, "A newer version of this app is out: ", tag, ". An admin installs it in ", link, ".")
+      bar.hidden = false
     }
+  }).catch(() => {})
+
+  function signedOut(message) {
+    auth = null; localStorage.removeItem("app_auth")
+    $("login").hidden = false; $("notes").hidden = $("out").hidden = $("who").hidden = true
+    say("login-error", message)
   }
-  $("signin").onclick = async () => {
+
+  async function load() {
+    if (!auth) return signedOut("")
+    $("login").hidden = true; $("notes").hidden = $("out").hidden = false
+    $("who").textContent = "signed in as "; $("who").append(Object.assign(document.createElement("code"), { textContent: auth.record.email })); $("who").hidden = false
+    say("list-error", ""); $("retry-row").hidden = true
+    let r
+    try { r = await api("collections/notes/records?sort=-created&perPage=200") } catch (_) { r = null }
+    if (r && r.status === 401) return signedOut("Your session ended. Sign in again.")
+    $("skeleton").hidden = true
+    if (!r || !r.ok) {
+      say("list-error", "Could not load the notes" + (r ? " (HTTP " + r.status + ")" : ": the backend did not answer") + ".")
+      $("retry-row").hidden = false
+      return
+    }
+    render((await r.json()).items || [])
+  }
+
+  function render(items) {
+    const list = $("list"); list.textContent = ""
+    for (const n of items) {
+      const li = document.createElement("li")
+      const row = document.createElement("label"); row.className = "entry" + (n.done ? " is-done" : "")
+      const box = document.createElement("input"); box.type = "checkbox"; box.checked = !!n.done
+      const bodyEl = document.createElement("span"); bodyEl.className = "body"
+      const title = document.createElement("span"); title.className = "title"; title.textContent = n.title
+      bodyEl.append(title)
+      const when = document.createElement("time"); const d = new Date(String(n.created).replace(" ", "T"))
+      when.dateTime = d.toISOString(); when.textContent = day.format(d)
+      box.onchange = async () => {
+        box.disabled = true
+        row.classList.toggle("is-done", box.checked)
+        const res = await api("collections/notes/records/" + n.id, { method: "PATCH", body: JSON.stringify({ done: box.checked }) }).catch(() => null)
+        box.disabled = false
+        if (res && res.ok) { n.done = box.checked; return count(items) }
+        box.checked = !!n.done; row.classList.toggle("is-done", !!n.done)
+        say("list-error", "Not saved: " + (res ? (await body(res)).message || "HTTP " + res.status : "the backend did not answer") + ".")
+      }
+      row.append(box, bodyEl, when)
+      li.append(row); list.append(li)
+    }
+    list.hidden = !items.length
+    $("empty").hidden = !!items.length
+    count(items)
+  }
+
+  function count(items) {
+    const done = items.filter((n) => n.done).length
+    say("count", !items.length ? "Nothing yet." :
+      items.length + (items.length === 1 ? " note" : " notes") + (done ? " · " + done + " done" : "") + " · tick one when it is done")
+  }
+
+  $("login-form").onsubmit = async (ev) => {
+    ev.preventDefault()
+    const email = $("email"), password = $("password"), btn = $("signin")
+    for (const f of [email, password]) f.setAttribute("aria-invalid", String(!f.value))
+    if (!email.value || !password.value) return say("login-error", "Enter the app login's email and password.")
+    btn.disabled = true; btn.dataset.state = "loading"; btn.textContent = "Signing in…"; say("login-error", "")
     const r = await api("collections/users/auth-with-password", { method: "POST",
-      body: JSON.stringify({ identity: $("email").value, password: $("password").value }) })
-    if (!r.ok) return ($("err").textContent = "Sign-in refused")
-    auth = await r.json(); localStorage.setItem("app_auth", JSON.stringify(auth)); load()
+      body: JSON.stringify({ identity: email.value, password: password.value }) }).catch(() => null)
+    btn.disabled = false; btn.textContent = "Sign in"; delete btn.dataset.state
+    if (!r) return say("login-error", "The backend did not answer. Try again in a moment.")
+    if (!r.ok) {
+      btn.dataset.state = "error"
+      password.setAttribute("aria-invalid", "true")
+      return say("login-error", "That email and password do not match the app login.")
+    }
+    auth = await r.json(); localStorage.setItem("app_auth", JSON.stringify(auth))
+    password.value = ""
+    $("skeleton").hidden = false; $("list").hidden = true
+    load()
   }
-  $("add").onclick = async () => {
-    if (!$("new").value) return
-    await api("collections/notes/records", { method: "POST", body: JSON.stringify({ owner: auth.record.id, title: $("new").value }) })
-    $("new").value = ""; load()
+  for (const id of ["email", "password"]) $(id).oninput = () => { $(id).removeAttribute("aria-invalid"); delete $("signin").dataset.state }
+
+  $("new").oninput = () => { $("add").disabled = !$("new").value.trim(); say("add-error", ""); $("new").removeAttribute("aria-invalid") }
+  $("add-form").onsubmit = async (ev) => {
+    ev.preventDefault()
+    const input = $("new"), btn = $("add"), title = input.value.trim()
+    if (!title) return
+    btn.disabled = true; btn.dataset.state = "loading"; btn.textContent = "Adding…"
+    const r = await api("collections/notes/records", { method: "POST", body: JSON.stringify({ owner: auth.record.id, title }) }).catch(() => null)
+    btn.textContent = "Add"; delete btn.dataset.state
+    if (r && r.ok) { input.value = ""; btn.disabled = true; await load(); return input.focus() }
+    btn.disabled = false; btn.dataset.state = "error"; input.setAttribute("aria-invalid", "true")
+    say("add-error", "Not added: " + (r ? (await body(r)).message || "HTTP " + r.status : "the backend did not answer") + ".")
   }
-  $("out").onclick = () => { auth = null; localStorage.removeItem("app_auth"); load() }
-  fetch("./api/health").then((r) => r.json()).then(() => {}).catch(() => {})
+  $("retry").onclick = () => { $("skeleton").hidden = false; load() }
+  $("out").onclick = () => { signedOut(""); $("email").focus() }
   load()
 </script>
 </body>

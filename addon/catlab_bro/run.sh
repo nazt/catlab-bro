@@ -51,6 +51,7 @@ export EXTRA_DIR="${EXTRA_DIR:-/config}"
 # for the panel: the built-in migrations (to tell committed drop-ins apart), the repo and this build
 export BUILTIN_MIGRATIONS="$app/pb_migrations" REPO_URL="$(pe REPO_URL)"
 export BUILD_VERSION="$(sed -n 's/^version=//p' "$app/BUILD" 2>/dev/null)" GIT_SHA="$(sed -n 's/^commit=//p' "$app/BUILD" 2>/dev/null)"
+export POCKETBASE_VERSION="$(sed -n 's/^pocketbase=//p' "$app/BUILD" 2>/dev/null)" PROJECT_NAME="$project_name"
 run=/data/runtime
 "$app/merge-extra.sh" "$app" "$EXTRA_DIR" "$run" | while read -r line; do bashio::log.info "$line"; done
 [ -f "$EXTRA_DIR/README.txt" ] || cat > "$EXTRA_DIR/README.txt" <<'TXT'
@@ -73,6 +74,7 @@ bashio::log.info "Provisioning ${project_name} (admin ${admin_email}, app login 
 # A failed download keeps the last good build; with none, the landing page stays at "/".
 public="$app/pb_public"
 ui_version="${ui_version:-latest}"
+export UI_CHANNEL="$ui_version"   # the panel's Source field shows it, even with no app UI loaded
 if [ -z "${ui_repo:-}" ] || [ "$ui_repo" = "null" ]; then
   ui_repo="$(pe REPO_URL | sed -E 's#^https?://github\.com/##; s#/+$##')"
 fi
@@ -95,7 +97,7 @@ if [ "$ui_version" != bundled ] && [ -n "$ui_repo" ]; then
     rm -rf /data/ui/current/_setup && cp -R "$app/pb_public" /data/ui/current/_setup
     public=/data/ui/current
     # for the in-app update check (pb_hooks/lib/uiupdate.js)
-    export UI_DIR=/data/ui UI_REPO="$ui_repo" UI_CHANNEL="$ui_version" SETUP_SRC="$app/pb_public"
+    export UI_DIR=/data/ui UI_REPO="$ui_repo" SETUP_SRC="$app/pb_public"
   fi
 fi
 

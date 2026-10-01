@@ -80,12 +80,15 @@ function upload(e) {
   return e.json(201, { name })
 }
 
+/** Home Assistant's Supervisor API (SUPERVISOR_URL only for tests: scripts/fake-supervisor.py). */
+const supervisor = () => (($os.getenv("SUPERVISOR_URL") || "").trim() || "http://supervisor").replace(/\/+$/, "")
+
 /** POST /api/app/restart -> 202; Home Assistant restarts the add-on, which applies pending migrations. */
 function restart(e) {
   const token = ($os.getenv("SUPERVISOR_TOKEN") || "").trim()
   if (!token) return e.json(501, { error: "not running as a Home Assistant add-on: restart the container yourself" })
   const res = $http.send({
-    url: "http://supervisor/addons/self/restart",
+    url: supervisor() + "/addons/self/restart",
     method: "POST",
     headers: { Authorization: "Bearer " + token },
     timeout: 5,
@@ -100,11 +103,14 @@ function restart(e) {
  *  action: this add-on does not get the manager role it would need to update itself). */
 function info(e) {
   const env = (k) => ($os.getenv(k) || "").trim()
-  const out = { version: env("BUILD_VERSION") || "dev", commit: env("GIT_SHA") || "dev", repo: env("REPO_URL"), update: null }
+  const out = {
+    name: env("PROJECT_NAME"), version: env("BUILD_VERSION") || "dev", commit: env("GIT_SHA") || "dev",
+    repo: env("REPO_URL"), pocketbase: env("POCKETBASE_VERSION"), update: null,
+  }
   const token = env("SUPERVISOR_TOKEN")
   if (token) {
     try {
-      const res = $http.send({ url: "http://supervisor/addons/self/info", headers: { Authorization: "Bearer " + token }, timeout: 5 })
+      const res = $http.send({ url: supervisor() + "/addons/self/info", headers: { Authorization: "Bearer " + token }, timeout: 5 })
       const d = (res.json && res.json.data) || {}
       out.update = { available: !!d.update_available, latest: d.version_latest || "", slug: d.slug || "" }
     } catch (err) {

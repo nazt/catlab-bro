@@ -39,7 +39,7 @@ RUN set -eux; \
 # /opt/app holds migrations, hooks, provision.sh and project.env: generated copies of the repo
 # root's files, written by scripts/sync-addon.sh (never edit them here).
 COPY rootfs /
-RUN printf 'version=%s\ncommit=%s\n' "${BUILD_VERSION:-dev}" "${GIT_SHA:-dev}" > /opt/app/BUILD
+RUN printf 'version=%s\ncommit=%s\npocketbase=%s\n' "${BUILD_VERSION:-dev}" "${GIT_SHA:-dev}" "${POCKETBASE_VERSION}" > /opt/app/BUILD
 COPY run.sh /run.sh
 RUN chmod 755 /run.sh /opt/app/provision.sh /opt/app/merge-extra.sh
 

@@ -11,3 +11,7 @@ node_modules/
 
 # drop-in migrations/hooks for a local container (move them into pocketbase/ to keep them)
 extra/
+
+# design-tool scratch (review screenshots, Hallmark's run log); DESIGN.md and PRODUCT.md are the record
+.impeccable/review/
+.hallmark/

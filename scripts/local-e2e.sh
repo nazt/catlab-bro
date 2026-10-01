@@ -19,7 +19,8 @@ url="http://127.0.0.1:$port"
 pid=""
 fails=0
 passes=0
-cleanup() { if [ -n "$pid" ]; then kill "$pid" 2>/dev/null; wait "$pid" 2>/dev/null; fi; rm -rf "$tmp"; }
+spid=""
+cleanup() { for p in "$pid" "$spid"; do if [ -n "$p" ]; then kill "$p" 2>/dev/null; wait "$p" 2>/dev/null; fi; done; rm -rf "$tmp"; }
 trap cleanup EXIT
 result() { if [ "$1" = 0 ]; then echo "PASS $2"; passes=$((passes + 1)); else echo "FAIL $2"; fails=$((fails + 1)); fi; }
 pe() { sed -n "s/^$1=//p" "$here/project.env" | tail -n 1 | sed 's/^"\(.*\)"$/\1/'; }
@@ -32,6 +33,9 @@ serve() { # data-dir migrations-dir hooks-dir log
   wait_health
 }
 stop() { kill "$pid" 2>/dev/null; wait "$pid" 2>/dev/null; pid=""; }
+# page PATH TEXT: the page at PATH contains TEXT. Not "curl | grep -q": under pipefail, grep -q
+# quitting at the first match makes curl fail with a broken pipe (exit 23) on a large page.
+page() { curl -fs -o "$tmp/page.html" "$url$1" && grep -q -- "$2" "$tmp/page.html"; }
 e2e() { "$runner" "$here/scripts/e2e.mjs" | sed 's/^/    /'; return "${PIPESTATUS[0]}"; }
 
 echo ".... pocketbase $("$pb" --version | awk '{print $NF}'), data dir $tmp, port $port"
@@ -100,7 +104,7 @@ result $? "server starts (auto-login on, test peer 127.0.0.1)"
   && python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d["token"] and d["record"]["email"]==sys.argv[2] and d["record"]["collectionName"]=="_superusers"' \
      "$tmp/ha.json" "$(kv admin_email)"
 result $? "ha-login through ingress returns the admin's dashboard session"
-curl -fs "$url/" | grep -q 'api/app/ha-login'; result $? "landing page (pb_public) is served at / and uses ha-login"
+page "/" 'api/app/ha-login'; result $? "landing page (pb_public) is served at / and uses ha-login"
 curl -sI "$url/_/" | grep -i '^content-security-policy:' | grep -q "frame-ancestors 'self'"
 result $? "dashboard may be framed by its own origin (the Home Assistant panel), not by others"
 tok="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["token"])' "$tmp/ha.json")"
@@ -177,16 +181,63 @@ uidir="$tmp/ui"; mkdir -p "$uidir/current"; cp -R "$here/ui/." "$uidir/current/"
 tag="ui-v$(tr -d ' \n' < "$here/ui/VERSION")"
 sed "s/%UI_VERSION%/$tag/" "$here/ui/index.html" > "$uidir/current/index.html"
 cp -R "$here/pocketbase/pb_public" "$uidir/current/_setup"
-UI_DIR="$uidir" UI_REPO=example/repo UI_CHANNEL="$tag" \
+UI_DIR="$uidir" UI_REPO=example/repo UI_CHANNEL="$tag" PROJECT_NAME="E2E Project" \
   "$pb" serve --dir "$mdata" --migrationsDir "$tmp/run/pb_migrations" --hooksDir "$here/pocketbase/pb_hooks" \
   --publicDir "$uidir/current" --http "127.0.0.1:$port" > "$tmp/serve-ui.log" 2>&1 &
 pid=$!; wait_health
-curl -fs "$url/" | grep -q "name=\"ui-version\" content=\"$tag\""; result $? "ui: the app UI is served at / and carries its release tag"
-curl -fs "$url/_setup/" | grep -q 'api/app/ha-login'; result $? "ui: the landing page moves to /_setup/"
+page "/" "name=\"ui-version\" content=\"$tag\""; result $? "ui: the app UI is served at / and carries its release tag"
+page "/_setup/" 'api/app/ha-login'; result $? "ui: the landing page moves to /_setup/"
 curl -s "$url/api/app/ui" -H "Authorization: $atok" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["managed"] and d["installed"]==sys.argv[1] and d["channel"]==sys.argv[1] and not d["update"]' "$tag"
 result $? "ui: status reports the running release (pinned: no update offered)"
 [ "$(curl -s -o /dev/null -w '%{http_code}' "$url/api/app/ui")" = 401 ]; result $? "ui: status refused without a superuser session"
+curl -fs "$url/api/app/about" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d=={"name":"E2E Project","ui":{"installed":sys.argv[1],"latest":"","update":False}}, d' "$tag"
+result $? "ui: /api/app/about (public) gives the app its name and its version, nothing more"
+src() { curl -s -o "$tmp/src.json" -w '%{http_code}' -X POST "$url/api/app/ui/source" -H 'Content-Type: application/json' "$@"; }
+[ "$(src -d '{"source":"latest"}')" = 401 ]; result $? "ui: the source cannot be set without a superuser session"
+[ "$(src -H "Authorization: $atok" -d '{"source":"https://x.invalid/a'"'"'b.zip"}')" = 400 ]
+result $? "ui: a source that could break out of the shell is refused (400)"
+[ "$(src -H "Authorization: $atok" -d '{"source":"ui-v9.9.9"}')" = 501 ]
+result $? "ui: outside Home Assistant the source is not saved (501: set UI_VERSION)"
 stop
+
+# --- 2e. the Home Assistant paths, against a stand-in Supervisor (scripts/fake-supervisor.py) ------
+sport="$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1])')"
+sup="$tmp/supervisor"; mkdir -p "$sup/files" "$tmp/ui2"
+sed "s/%UI_VERSION%/ui-v0.2.0/" "$here/ui/index.html" > "$tmp/ui2/index.html"
+python3 -c 'import sys, zipfile; z = zipfile.ZipFile(sys.argv[1], "w"); z.write(sys.argv[2], "index.html"); z.close()' "$sup/files/dist.zip" "$tmp/ui2/index.html"
+SUPERVISOR_TOKEN=e2e-token FAKE_VERSION=0.1.8 FAKE_LATEST=0.1.9 FAKE_SLUG=e2e_slug \
+  python3 "$here/scripts/fake-supervisor.py" "$sport" "$sup" "$sup/files" 2> "$tmp/supervisor.log" &
+spid=$!
+for _ in $(seq 1 50); do curl -fs -o /dev/null "http://127.0.0.1:$sport/files/dist.zip" && break; sleep 0.1; done
+SUPERVISOR_URL="http://127.0.0.1:$sport" SUPERVISOR_TOKEN=e2e-token UI_DIR="$uidir" UI_REPO=example/repo UI_CHANNEL="$tag" \
+  SETUP_SRC="$here/pocketbase/pb_public" \
+  "$pb" serve --dir "$mdata" --migrationsDir "$tmp/run/pb_migrations" --hooksDir "$here/pocketbase/pb_hooks" \
+  --publicDir "$uidir/current" --http "127.0.0.1:$port" > "$tmp/serve-sup.log" 2>&1 &
+pid=$!; wait_health
+curl -s "$url/api/app/info" -H "Authorization: $atok" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["update"]=={"available":True,"latest":"0.1.9","slug":"e2e_slug"}, d'
+result $? "supervisor: the panel learns that add-on 0.1.9 is out (/addons/self/info)"
+zipurl="http://127.0.0.1:$sport/files/dist.zip"
+[ "$(src -H "Authorization: $atok" -d "{\"source\":\"$zipurl\"}")" = 200 ] \
+  && page "/" 'content="ui-v0.2.0"' && page "/_setup/" 'api/app/ha-login'
+result $? "ui source: a dist.zip URL is loaded at once, no restart, the admin page stays at /_setup/"
+python3 -c 'import json,sys; o=json.load(open(sys.argv[1])); assert o["ui_version"]==sys.argv[2] and o["admin_email"]=="admin@example.invalid", o' "$sup/options.json" "$zipurl"
+result $? "ui source: saved as the add-on's ui_version, the other options kept"
+[ "$(src -H "Authorization: $atok" -d "{\"source\":\"http://127.0.0.1:$sport/files/missing.zip\"}")" = 500 ] \
+  && grep -q 'could not load' "$tmp/src.json" && page "/" 'content="ui-v0.2.0"' \
+  && python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["ui_version"]==sys.argv[2]' "$sup/options.json" "$zipurl"
+result $? "ui source: a build that cannot be loaded is refused, not saved, and the running one stays"
+[ "$(src -H "Authorization: $atok" -d '{"source":"bundled"}')" = 200 ] \
+  && python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d["restart"] and d["channel"]=="bundled", d' "$tmp/src.json"
+result $? "ui source: bundled is saved and asks for a restart (the served folder changes at start)"
+[ "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/api/app/restart" -H "Authorization: $atok")" = 202 ] \
+  && [ "$(grep -c restart "$sup/restarts")" = 1 ]
+result $? "restart: the panel asks the Supervisor to restart the add-on"
+stop; kill "$spid" 2>/dev/null; wait "$spid" 2>/dev/null; spid=""
+
+# --- 2f. one design system: both pages carry the same token block (DESIGN.md) -----------------
+tokens() { sed -n '/tokens:start/,/tokens:end/p' "$1"; }
+[ -n "$(tokens "$here/ui/index.html")" ] && [ "$(tokens "$here/ui/index.html")" = "$(tokens "$here/pocketbase/pb_public/index.html")" ]
+result $? "design: the admin page and the app UI share one token block"
 
 # --- 3. same schema, hooks disabled ------------------------------------------------------------
 mkdir -p "$tmp/no-hooks"

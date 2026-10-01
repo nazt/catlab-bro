@@ -50,6 +50,8 @@ jobs:
           fi
       - name: Privacy check
         run: python3 scripts/privacy_check.py
+      - name: Scripts parse (ha-deploy needs Node 22+ for its WebSocket)
+        run: node --check scripts/ha-deploy.mjs && node -e 'if (typeof WebSocket !== "function") process.exit(1)'
       - name: Add-on in sync
         run: scripts/sync-addon.sh --check
       - name: End-to-end (provisioning, rules with/without hooks, import)

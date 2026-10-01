@@ -20,7 +20,12 @@ for kind in pb_migrations pb_hooks; do
     [ -f "$f" ] || continue
     name="$(basename "$f")"
     if [ -e "$app/$kind/$name" ]; then
-      echo "merge-extra: refused $kind/$name: a built-in file has that name" >&2; continue
+      if cmp -s "$f" "$app/$kind/$name"; then
+        echo "merge-extra: skipped $kind/$name: committed to the repo (now built in); the drop-in can be deleted"
+      else
+        echo "merge-extra: refused $kind/$name: differs from the built-in file with that name; the built-in wins" >&2
+      fi
+      continue
     fi
     cp "$f" "$out/$kind/$name"; added=$((added + 1))
     echo "merge-extra: + $kind/$name"

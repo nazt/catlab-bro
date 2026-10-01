@@ -111,7 +111,30 @@ routerAdd("POST", "/api/app/ui/update", (e) => {
     return e.json(500, { error: String(err) })
   }
 }, $apis.requireSuperuserAuth())
+// The panel's "Source" field: ui_version (latest | a release tag | a dist.zip URL | bundled), saved
+// as the add-on's option and loaded now when it can be (Home Assistant only; compose: UI_VERSION).
+routerAdd("POST", "/api/app/ui/source", (e) => {
+  const ui = require(`${__hooks}/lib/uiupdate.js`)
+  const source = String((e.requestInfo().body || {}).source || "").trim()
+  if (!ui.validSource(source)) return e.json(400, { error: "use latest, a release tag like ui-v0.1.0, a dist.zip URL, or bundled" })
+  if (!($os.getenv("SUPERVISOR_TOKEN") || "").trim()) return e.json(501, { error: "not a Home Assistant add-on: set UI_VERSION and restart the container" })
+  try {
+    return e.json(200, ui.setSource(e.app, source))
+  } catch (err) {
+    return e.json(500, { error: String(err) })
+  }
+}, $apis.requireSuperuserAuth())
 cronAdd("ui-update-check", "*/15 * * * *", () => { require(`${__hooks}/lib/uiupdate.js`).status($app, false) })
+
+// For the app itself (public): the project's name and whether a newer app UI is out, from the
+// cached check above (never a GitHub call per request). Installing it stays an admin action.
+routerAdd("GET", "/api/app/about", (e) => {
+  const s = require(`${__hooks}/lib/uiupdate.js`).status(e.app, false)
+  return e.json(200, {
+    name: ($os.getenv("PROJECT_NAME") || "").trim(),
+    ui: { installed: s.installed, latest: s.update ? s.latest : "", update: s.update },
+  })
+})
 
 // The app's setup link + login for the panel (see lib/setup.js). Superusers only.
 routerAdd("GET", "/api/app/setup", (e) => require(`${__hooks}/lib/setup.js`).setup(e), $apis.requireSuperuserAuth())

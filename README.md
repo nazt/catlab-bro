@@ -22,6 +22,18 @@ docker compose logs        # admin UI URL + admin and app logins, random passwor
 
 `docker compose down -v` deletes everything; the next start provisions again.
 
+## Deploy to Home Assistant
+
+The buttons above add the repository to Home Assistant. From a checkout, one command installs or
+updates the add-on **and starts it** (Home Assistant never starts an add-on after installing it),
+then waits until PocketBase answers:
+
+```sh
+scripts/ha-deploy.mjs --ha http://homeassistant.local:8123 --wait   # --wait: right after git push
+```
+
+It signs in with a long-lived access token kept in `~/.config/ha-deploy/<host>.token` (mode 600).
+
 ## Make it your project
 
 A new repo from this template **names itself after the repository** (`catlab-bro` → "Catlab
@@ -41,7 +53,7 @@ Or tell a coding agent: *"Set up this template for my project, following AGENTS.
 |---|---|
 | `pocketbase/` | migrations, hooks, `collections.json`: the part you edit |
 | `addon/<slug>/` | the image (pinned, SHA-256-verified PocketBase) and Home Assistant add-on |
-| `scripts/` | provisioning, rename, e2e tests, sync, PocketBase version bump, privacy check |
+| `scripts/` | provisioning, rename, e2e tests, sync, Home Assistant deploy, PocketBase version bump, privacy check |
 | `AGENTS.md` | instructions for AI coding agents |
 
 ## Docs
