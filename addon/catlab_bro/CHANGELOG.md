@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.11
+
+- Admin page: a 502 from the ingress proxy during Apply means restarting (template) (76410da)
+
 ## 0.1.10
 
 - Review fixes: Home Assistant's neutral ground, the new-tab arrow against its link, paths break at / (template); UI 0.1.4 (446d926)
