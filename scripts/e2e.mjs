@@ -211,7 +211,8 @@ async function main() {
   const bList = await api("GET", "/api/collections/notes/records?perPage=200", { token: B.token })
   const bTitles = (bList.json?.items || []).map((n) => n.title)
   check("B lists only its own notes", bTitles.includes(`b1-${run}`) && !bTitles.includes(`a1-${run}`), JSON.stringify(bTitles))
-  const filtered = await api("GET", `/api/collections/notes/records?filter=${encodeURIComponent("done=true")}`, { token: A.token })
+  // scoped to this run: the app login may also own starter notes from pocketbase/seed
+  const filtered = await api("GET", `/api/collections/notes/records?filter=${encodeURIComponent(`done=true && title~"-${run}"`)}`, { token: A.token })
   check("A filters its notes (done=true)", (filtered.json?.items || []).map((n) => n.title).join() === `a2-${run}`)
 
   const bView = await api("GET", `/api/collections/notes/records/${n1.json.id}`, { token: B.token })

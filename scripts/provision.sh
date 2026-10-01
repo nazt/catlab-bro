@@ -21,6 +21,7 @@
 #   --hooks-dir D         default pocketbase/pb_hooks (must contain the app-user command)
 #   --url U               public base URL for the banner (default http://127.0.0.1:DEFAULT_PORT)
 #   --project-name N      banner title (default PROJECT_NAME from project.env)
+#   --seed-dir D          starter records loaded ONCE on the first run (default pocketbase/seed)
 #   --pocketbase BIN      default: pocketbase on PATH (or $POCKETBASE)
 set -euo pipefail
 
@@ -40,6 +41,7 @@ data_dir="$pbdir/pb_data"
 state_dir=""
 migrations_dir="$pbdir/pb_migrations"
 hooks_dir="$pbdir/pb_hooks"
+seed_dir="$pbdir/seed"
 pb="${POCKETBASE:-pocketbase}"
 
 while [ $# -gt 0 ]; do
@@ -53,6 +55,7 @@ while [ $# -gt 0 ]; do
     --url) base_url="$2"; shift 2 ;;
     --project-name) project_name="$2"; shift 2 ;;
     --pocketbase) pb="$2"; shift 2 ;;
+    --seed-dir) seed_dir="$2"; shift 2 ;;
     -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
     *) echo "provision: unknown option $1" >&2; exit 2 ;;
   esac
@@ -113,6 +116,17 @@ provision() { # role email
 provision admin "$admin_email"
 provision app "$app_email"
 chmod 600 "$creds"
+
+# Starter records, once: seeded when the marker is missing and the seed dir has *.json files.
+if [ ! -f "$state_dir/.seeded" ] && ls "$seed_dir"/*.json >/dev/null 2>&1; then
+  # console commands do not apply this project's migrations (serve does): create the collections first
+  if pbrun migrate up && pbrun app-seed "$app_email" "$seed_dir"; then
+    date -u +%FT%TZ > "$state_dir/.seeded"
+    echo "provision: starter records loaded from $seed_dir (once)"
+  else
+    echo "provision: WARNING: loading starter records from $seed_dir failed; PocketBase starts anyway" >&2
+  fi
+fi
 
 if [ -n "$generated" ]; then
   echo "=================================================================="

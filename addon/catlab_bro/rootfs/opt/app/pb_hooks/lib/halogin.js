@@ -8,7 +8,14 @@
 //
 //   HA_AUTO_LOGIN     "true" to enable (add-on option auto_login; off outside Home Assistant)
 //   HA_INGRESS_PEER   the ingress proxy address (default 172.30.32.2; tests use 127.0.0.1)
-//   HA_USER_IDS       comma-separated HA user ids allowed; empty = any user ingress lets in
+//   HA_USER_IDS       comma-separated HA user ids allowed (add-on option ha_user_ids)
+//   HA_OWNER_FILE     where the claimed owner is kept (/data/ha-owner)
+//
+// Ingress is open to EVERY Home Assistant user, not only admins (panel_admin only hides the
+// sidebar entry; Supervisor forwards X-Remote-User-Id without an admin check). So with no
+// ha_user_ids, the FIRST user to open the panel after install claims it (the installer, in
+// practice: the panel is hidden from non-admins) and only that user is let in afterwards.
+// Delete /data/ha-owner (or set ha_user_ids) to change it.
 //   ADMIN_EMAIL       the superuser to sign in as (set by run.sh)
 
 /** "1.2.3.4:5678" / "[::1]:5678" -> the host part. */
@@ -28,6 +35,23 @@ function decide({ enabled, peer, trustedPeer, userId, ingressPath, allowlist }) 
   return { ok: true }
 }
 
+/** The allowlist: ha_user_ids, else the claimed owner, else claim it for this user (first open). */
+function allowedUsers(userId) {
+  const env = (k) => ($os.getenv(k) || "").trim()
+  const ids = env("HA_USER_IDS").split(",").map((x) => x.trim()).filter(Boolean)
+  if (ids.length) return ids
+  const file = env("HA_OWNER_FILE")
+  if (!file) return []                       // no claim file configured: allow any (tests only)
+  try {
+    const owner = toString($os.readFile(file)).trim()
+    if (owner) return [owner]
+  } catch (_) {}
+  if (!userId) return ["(none)"]
+  $os.writeFile(file, userId, 0o600)
+  console.log("ha-login: Home Assistant user " + userId + " claimed this add-on (first to open the panel); others are refused")
+  return [userId]
+}
+
 /** GET /api/app/ha-login */
 function haLogin(e) {
   const env = (k) => ($os.getenv(k) || "").trim()
@@ -37,9 +61,11 @@ function haLogin(e) {
     trustedPeer: env("HA_INGRESS_PEER") || "172.30.32.2",
     userId: (e.request.header.get("X-Remote-User-Id") || "").trim(),
     ingressPath: (e.request.header.get("X-Ingress-Path") || "").trim(),
-    allowlist: env("HA_USER_IDS").split(",").map((x) => x.trim()).filter(Boolean),
+    allowlist: [],
   })
   if (!d.ok) return e.json(d.status, { error: d.error })
+  const userId = (e.request.header.get("X-Remote-User-Id") || "").trim()
+  if (allowedUsers(userId).indexOf(userId) < 0) return e.json(403, { error: "Home Assistant user not allowed" })
   let admin
   try {
     admin = e.app.findAuthRecordByEmail("_superusers", env("ADMIN_EMAIL"))
@@ -51,4 +77,4 @@ function haLogin(e) {
   return $apis.recordAuthResponse(e, admin, "ha-ingress")
 }
 
-module.exports = { peerHost, decide, haLogin }
+module.exports = { peerHost, decide, allowedUsers, haLogin }

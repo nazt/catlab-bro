@@ -77,6 +77,10 @@ serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp
 code="$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/api/collections/users/auth-with-password" \
   -H 'Content-Type: application/json' -d "{\"identity\":\"$(kv app_email)\",\"password\":\"$changed\"}")"
 [ "$code" = 200 ]; result $? "later-changed app password was not reset by provisioning"
+atok="$(curl -s -X POST "$url/api/collections/_superusers/auth-with-password" -H 'Content-Type: application/json' \
+  -d "{\"identity\":\"$(kv admin_email)\",\"password\":\"$(kv admin_password)\"}" | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')"
+seeded="$(curl -s "$url/api/collections/notes/records?perPage=1&filter=title%3D'Welcome'" -H "Authorization: $atok" | python3 -c 'import json,sys;print(json.load(sys.stdin)["totalItems"])')"
+[ -f "$data/.seeded" ] && [ "$seeded" = 1 ]; result $? "seed: starter notes loaded once (pocketbase/seed), not duplicated by later runs"
 PB_URL="$url" PB_ADMIN_EMAIL="$(kv admin_email)" PB_ADMIN_PASSWORD="$(kv admin_password)" \
   PB_APP_EMAIL="$(kv app_email)" PB_APP_PASSWORD="$changed" e2e
 result $? "e2e.mjs (migrations + hooks, provisioned logins)"
@@ -87,6 +91,7 @@ stop
 ha() { curl -s -o "$tmp/ha.json" -w '%{http_code}' "$url/api/app/ha-login" "$@"; }
 ING=(-H 'X-Ingress-Path: /api/hassio_ingress/test')
 HA_AUTO_LOGIN=true HA_INGRESS_PEER=127.0.0.1 HA_USER_IDS=ha-user-1 ADMIN_EMAIL="$(kv admin_email)" \
+  CREDENTIALS_FILE="$creds" PUBLIC_URL="$url" SETUP_SCHEME="$(pe SETUP_SCHEME)" \
   serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-ha.log"
 result $? "server starts (auto-login on, test peer 127.0.0.1)"
 [ "$(ha)" = 403 ]; result $? "ha-login without Home Assistant headers is refused"
@@ -96,10 +101,26 @@ result $? "server starts (auto-login on, test peer 127.0.0.1)"
      "$tmp/ha.json" "$(kv admin_email)"
 result $? "ha-login through ingress returns the admin's dashboard session"
 curl -fs "$url/" | grep -q 'api/app/ha-login'; result $? "landing page (pb_public) is served at / and uses ha-login"
+tok="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["token"])' "$tmp/ha.json")"
+setup="$(curl -s "$url/api/app/setup" -H "Authorization: $tok")"
+echo "$setup" | python3 -c 'import json,sys; d=json.load(sys.stdin); import urllib.parse as u
+assert d["app_email"] and d["app_password"] and d["link"].startswith(sys.argv[1]+"://setup?u=")
+assert u.parse_qs(u.urlsplit(d["link"]).query)["p"][0] == d["app_password"]' "$(pe SETUP_SCHEME)"
+result $? "setup: the panel (superuser session) gets the app login and its <scheme>://setup link"
+[ "$(curl -s -o /dev/null -w '%{http_code}' "$url/api/app/setup")" = 401 ]; result $? "setup: refused without a superuser session"
 stop
 HA_AUTO_LOGIN=true HA_INGRESS_PEER=192.0.2.1 ADMIN_EMAIL="$(kv admin_email)" \
   serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-ha2.log"
 [ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: ha-user-1')" = 403 ]; result $? "ha-login refuses the same headers from any other peer (the published port)"
+stop
+# No ha_user_ids: the first Home Assistant user to open the panel claims it; everyone else is refused.
+HA_AUTO_LOGIN=true HA_INGRESS_PEER=127.0.0.1 HA_OWNER_FILE="$tmp/ha-owner" ADMIN_EMAIL="$(kv admin_email)" \
+  serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-claim.log"
+[ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: first-user')" = 200 ] && [ "$(cat "$tmp/ha-owner")" = first-user ] \
+  && [ "$(mode "$tmp/ha-owner")" = 600 ]
+result $? "first panel user claims the add-on (owner file written, mode 600)"
+[ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: second-user')" = 403 ]; result $? "any other Home Assistant user is refused after the claim"
+[ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: first-user')" = 200 ]; result $? "the owner keeps getting in"
 stop
 serve "$data" "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$tmp/serve-ha3.log"
 [ "$(ha "${ING[@]}" -H 'X-Remote-User-Id: ha-user-1')" = 404 ]; result $? "ha-login is off unless HA_AUTO_LOGIN=true (standalone)"

@@ -37,8 +37,39 @@ $app.rootCmd.addCommand(new Command({
   },
 }))
 
+// Console command used by scripts/provision.sh on the first start: load starter records from
+// <dir>/<collection>.json (an array of field objects). The value "@app" in any field is replaced
+// by the app login's record id (e.g. "owner": "@app"). Run once; provision.sh keeps a marker.
+//   pocketbase app-seed <app-email> <dir> --dir ... --migrationsDir ... --hooksDir ...
+$app.rootCmd.addCommand(new Command({
+  use: "app-seed <app-email> <dir>",
+  short: "Load starter records from <dir>/<collection>.json",
+  run: (cmd, args) => {
+    if (!args || args.length !== 2) throw new Error("usage: app-seed <app-email> <dir>")
+    const appUser = $app.findAuthRecordByEmail("users", args[0])
+    let total = 0
+    for (const entry of $os.readDir(args[1])) {
+      const file = entry.name()
+      if (!file.endsWith(".json")) continue
+      const collection = $app.findCollectionByNameOrId(file.slice(0, -5))
+      const rows = JSON.parse(toString($os.readFile(args[1] + "/" + file)))
+      for (const row of rows) {
+        const record = new Record(collection)
+        for (const key of Object.keys(row)) record.set(key, row[key] === "@app" ? appUser.id : row[key])
+        $app.save(record)
+        total++
+      }
+      console.log("Seeded " + rows.length + " " + collection.name)
+    }
+    console.log("Seeded " + total + " records")
+  },
+}))
+
 // Home Assistant auto-login for the sidebar panel (see lib/halogin.js). Off unless HA_AUTO_LOGIN=true.
 routerAdd("GET", "/api/app/ha-login", (e) => require(`${__hooks}/lib/halogin.js`).haLogin(e))
+
+// The app's setup link + login for the panel (see lib/setup.js). Superusers only.
+routerAdd("GET", "/api/app/setup", (e) => require(`${__hooks}/lib/setup.js`).setup(e), $apis.requireSuperuserAuth())
 
 // Example hook (disabled): trim note titles before they are saved. Uncomment to try it; the
 // e2e tests do not depend on it.

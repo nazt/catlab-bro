@@ -1,0 +1,4 @@
+[
+  { "owner": "@app", "title": "Welcome", "body": "Seeded on first start from pocketbase/seed/notes.json. Replace or delete the seed files for your project.", "done": false },
+  { "owner": "@app", "title": "Open the dashboard from the sidebar", "body": "Signed in to Home Assistant = signed in to PocketBase.", "done": true }
+]

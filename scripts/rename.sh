@@ -25,7 +25,7 @@ changed=()
 
 sub project.env -e "s|^PROJECT_NAME=.*|PROJECT_NAME=\"$name\"|" -e "s|^PROJECT_SLUG=.*|PROJECT_SLUG=$slug|" \
   -e "s|^ADDON_SLUG=.*|ADDON_SLUG=$slug|" -e "s|^PROJECT_DESCRIPTION=.*|PROJECT_DESCRIPTION=\"$desc\"|" \
-  -e "s|^DEFAULT_PORT=.*|DEFAULT_PORT=$port|"
+  -e "s|^DEFAULT_PORT=.*|DEFAULT_PORT=$port|" -e "s|^SETUP_SCHEME=.*|SETUP_SCHEME=$dash|"
 changed+=(project.env)
 
 if [ "$old_slug" != "$slug" ] && [ -d "addon/$old_slug" ]; then

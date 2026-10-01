@@ -12,6 +12,7 @@ dest="$here/addon/$slug/rootfs/opt/app"
 stage="$(mktemp -d)"; trap 'rm -rf "$stage"' EXIT
 cp "$here/project.env" "$here/scripts/provision.sh" "$stage/"
 cp -R "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$here/pocketbase/pb_public" "$stage/"
+[ -d "$here/pocketbase/seed" ] && cp -R "$here/pocketbase/seed" "$stage/"
 
 if [ "${1:-}" = "--check" ]; then
   if diff -r "$stage" "$dest" >/dev/null 2>&1; then echo "add-on is in sync"; exit 0; fi

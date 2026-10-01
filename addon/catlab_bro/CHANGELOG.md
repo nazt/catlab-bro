@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Sidebar panel: the first Home Assistant user to open it claims it (others refused); shows the app setup link + QR.
+- Starter notes seeded once on first start.
+
 ## 0.1.1
 
 - Host port 8277 (own port per project, no clash with other PocketBase add-ons on 8090).

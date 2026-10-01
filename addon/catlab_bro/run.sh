@@ -31,6 +31,7 @@ if [ -n "${SUPERVISOR_TOKEN:-}" ] && bashio::supervisor.ping >/dev/null 2>&1; th
   # sidebar panel auto-login (pb_hooks/lib/halogin.js): trusted only from the ingress proxy
   export HA_AUTO_LOGIN="$(bashio::config 'auto_login')"
   export HA_USER_IDS="$(bashio::config 'ha_user_ids')"
+  export HA_OWNER_FILE=/data/ha-owner   # first panel user claims it when ha_user_ids is empty
 else
   bashio::log.info "Mode: standalone (no Supervisor; options from environment variables)"
   admin_email="${ADMIN_EMAIL:-$(pe ADMIN_EMAIL)}"
@@ -39,6 +40,8 @@ else
   export HA_AUTO_LOGIN=false   # no Home Assistant, no ingress: never auto-login
 fi
 export ADMIN_EMAIL="$admin_email"
+# for the panel's setup link (pb_hooks/lib/setup.js)
+export PUBLIC_URL="$url" CREDENTIALS_FILE=/data/initial-credentials.txt SETUP_SCHEME="$(pe SETUP_SCHEME)"
 
 bashio::log.info "Provisioning ${project_name} (admin ${admin_email}, app login ${app_email})"
 "$app/provision.sh" --dir "$data" --state-dir /data \
