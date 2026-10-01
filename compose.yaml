@@ -1,0 +1,30 @@
+# Standalone run (no Home Assistant): the same image as the add-on.
+#
+#   docker compose up --build -d     # podman compose works too
+#   docker compose logs              # first start: admin + app logins, shown ONCE
+#   docker compose down -v           # stop and DELETE all data
+#
+# Settings: copy .env.example to .env (git-ignored). Passwords are always generated.
+name: pocketbase-template
+
+services:
+  pocketbase:
+    build:
+      context: ./addon/pocketbase_template
+    image: pocketbase-template:dev
+    restart: unless-stopped
+    ports:
+      # Localhost only. For other devices on your LAN drop "127.0.0.1:" and set PUBLIC_URL in
+      # .env; for the internet put HTTPS (reverse proxy or tunnel) in front, never plain 8090.
+      - "127.0.0.1:${PORT:-8090}:8090"
+    environment:
+      # the host port, for the banner's URL (the container itself always listens on 8090)
+      PORT: ${PORT:-8090}
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - pb-data:/data
+
+volumes:
+  pb-data:

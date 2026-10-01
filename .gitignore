@@ -1,0 +1,10 @@
+# PocketBase data, generated credentials and local settings: never commit
+pb_data/
+.env
+.env.*
+!.env.example
+initial-credentials.txt
+.provision-state
+*.log
+.DS_Store
+node_modules/

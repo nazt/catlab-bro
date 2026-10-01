@@ -1,0 +1,76 @@
+# Runs in a repository created from the template, never in the template itself:
+#   1. names the project after the repository, once: `catlab-bro` -> "Catlab Bro" / catlab_bro
+#      (scripts/rename.sh), points the Home Assistant links (repository.yaml `url:`, README
+#      buttons) at this repository and, in PUBLIC repositories, at a prebuilt GHCR image
+#      (config.yaml `image:`, then starts addon-image.yml), and commits that as github-actions;
+#   2. opens the "Set up this backend" issue with the rest of the checklist, once (it looks for
+#      the `setup` label first).
+name: init
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: write
+  actions: write   # start addon-image.yml (pushes made with this token start no workflows)
+
+jobs:
+  init:
+    if: github.repository != 'Soul-Brews-Studio/pocketbase-template'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Name the project after the repository (once) and point the Home Assistant links here
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+          REPO: ${{ github.repository }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          PRIVATE: ${{ github.event.repository.private }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # a manual run (workflow_dispatch) carries no repository payload
+          REPO_NAME="${REPO_NAME:-${REPO#*/}}"
+          PRIVATE="${PRIVATE:-$(gh repo view "$REPO" --json isPrivate --jq .isPrivate)}"
+          if grep -q '^PROJECT_SLUG=pocketbase_template$' project.env; then
+            # catlab-bro -> slug catlab_bro, name "Catlab Bro"
+            slug=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/^_+|_+$//g; s/^([0-9])/p_\1/')
+            name=$(echo "$REPO_NAME" | sed -E 's/[-_.]+/ /g' | awk '{for (i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
+            scripts/rename.sh "$name" "$slug" "PocketBase backend for $name"
+            msg="Name the project \"$name\" ($slug) after the repository"
+          else
+            msg="Point the Home Assistant links at $REPO"
+          fi
+          # public: Home Assistant pulls a prebuilt image (built by addon-image.yml); private: builds on the device
+          if [ "$PRIVATE" = "false" ]; then scripts/ha-buttons.sh "$REPO_URL" --image; else scripts/ha-buttons.sh "$REPO_URL"; fi
+          # the CI badge points at this repository
+          sed -i "s#Soul-Brews-Studio/pocketbase-template/actions#$REPO/actions#g" README.md
+          if [ -z "$(git status --porcelain)" ]; then echo "nothing to change"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "$msg"
+          git push
+          if grep -q '^image:' addon/*/config.yaml; then gh workflow run addon-image.yml -R "$REPO" --ref main; fi
+
+      - name: Open the setup issue (once)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh issue list -R "$REPO" --label setup --state all --limit 1 --json number --jq '.[0].number' | grep -q .; then
+            echo "setup issue already exists"; exit 0
+          fi
+          gh label create setup -R "$REPO" --color 0E8A16 --description "First-run setup from the template" 2>/dev/null || true
+          name=$(sed -n 's/^PROJECT_NAME=//p' project.env | sed 's/^"\(.*\)"$/\1/')
+          url=$(gh issue create -R "$REPO" --title "Set up $name" --label setup --body-file .github/setup-issue.md)
+          n="${url##*/}"
+          owner=$(echo "$REPO" | cut -d/ -f1)
+          sed -e "s/__ISSUE__/$n/" -e "s/__NAME__/$name/g" -e "s#__OWNER__#$owner#g" .github/setup-issue.md > /tmp/body.md
+          gh issue edit "$n" -R "$REPO" --body-file /tmp/body.md
+          echo "opened $url"

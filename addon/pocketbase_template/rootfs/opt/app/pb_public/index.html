@@ -1,0 +1,57 @@
+<!doctype html>
+<!--
+  Landing page at "/" and the Home Assistant sidebar panel (ingress). Every URL here is relative,
+  so it works both at http://host:8090/ and under Home Assistant's /api/hassio_ingress/<token>/.
+  Inside Home Assistant it asks ./api/app/ha-login for an admin token (granted only through the
+  ingress proxy, see pb_hooks/lib/halogin.js), stores it where the PocketBase dashboard looks for
+  it, and opens the dashboard: signed in to Home Assistant = signed in to PocketBase.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PocketBase</title>
+  <style>
+    :root { color-scheme: light dark; --fg: #e5e7eb; --muted: #9ca3af; --bg: #111827; --card: #1f2937; --accent: #38bdf8; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--fg);
+           font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+    main { background: var(--card); border-radius: 14px; padding: 28px 32px; width: min(460px, 90vw); }
+    h1 { margin: 0 0 4px; font-size: 20px; }
+    p { margin: 8px 0; color: var(--muted); }
+    a.button { display: inline-block; margin-top: 14px; padding: 9px 16px; border-radius: 9px; background: var(--accent);
+               color: #0b1220; font-weight: 600; text-decoration: none; }
+    code { font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PocketBase</h1>
+  <p id="status">Checking…</p>
+  <a class="button" href="./_/">Open dashboard</a>
+  <p><code>API: <span id="api"></span></code></p>
+</main>
+<script>
+  const base = location.pathname.replace(/index\.html$/, "").replace(/\/$/, "")
+  document.getElementById("api").textContent = location.origin + base + "/api/"
+  const status = (t) => (document.getElementById("status").textContent = t)
+
+  fetch("./api/app/ha-login", { credentials: "same-origin" })
+    .then(async (r) => {
+      if (!r.ok) {
+        const why = (await r.json().catch(() => ({}))).error || r.status
+        status(why === "auto-login is off" || r.status === 404
+          ? "Sign in to the dashboard with the admin login."
+          : "Not signed in automatically (" + why + "). Sign in to the dashboard with the admin login.")
+        return
+      }
+      const { token, record } = await r.json()
+      // The dashboard keeps its session under "__pb_superusers__" + its own path, without the
+      // trailing slash: e.g. "__pb_superusers__/api/hassio_ingress/<token>/_".
+      localStorage.setItem("__pb_superusers__" + base + "/_", JSON.stringify({ token, record, model: record }))
+      status("Signed in through Home Assistant, opening the dashboard…")
+      location.replace("./_/")
+    })
+    .catch(() => status("PocketBase is not reachable yet. Reload in a moment."))
+</script>
+</body>
+</html>
