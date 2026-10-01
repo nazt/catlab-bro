@@ -187,6 +187,9 @@ UI_DIR="$uidir" UI_REPO=example/repo UI_CHANNEL="$tag" PROJECT_NAME="E2E Project
 pid=$!; wait_health
 page "/" "name=\"ui-version\" content=\"$tag\""; result $? "ui: the app UI is served at / and carries its release tag"
 page "/_setup/" 'api/app/ha-login'; result $? "ui: the landing page moves to /_setup/"
+curl -sI "$url/" | tr -d '\r' | grep -qi '^cache-control: no-cache$' \
+  && [ "$(curl -s -o /dev/null -w '%{http_code}' "$url/fonts/OFL.txt")" = 200 ] && ! curl -sI "$url/fonts/OFL.txt" | grep -qi '^cache-control: no-cache'
+result $? "ui: HTML is revalidated on every visit (no stale page after an update); assets are not"
 curl -s "$url/api/app/ui" -H "Authorization: $atok" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["managed"] and d["installed"]==sys.argv[1] and d["channel"]==sys.argv[1] and not d["update"]' "$tag"
 result $? "ui: status reports the running release (pinned: no update offered)"
 [ "$(curl -s -o /dev/null -w '%{http_code}' "$url/api/app/ui")" = 401 ]; result $? "ui: status refused without a superuser session"

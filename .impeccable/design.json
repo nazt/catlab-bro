@@ -1,0 +1,511 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-01T08:32:47Z",
+  "title": "Design System: Catlab Bro",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Panel Paper",
+        "canonical": "oklch(18.2% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Bar Paper",
+        "canonical": "oklch(21.6% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Warm Ink",
+        "canonical": "oklch(92% 0.014 85)",
+        "tonalRamp": [
+          "oklch(15% 0.014 85)",
+          "oklch(26% 0.014 85)",
+          "oklch(38% 0.014 85)",
+          "oklch(49% 0.014 85)",
+          "oklch(61% 0.014 85)",
+          "oklch(72% 0.014 85)",
+          "oklch(84% 0.014 85)",
+          "oklch(95% 0.014 85)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Second Ink",
+        "canonical": "oklch(74% 0.012 85)",
+        "tonalRamp": [
+          "oklch(15% 0.012 85)",
+          "oklch(26% 0.012 85)",
+          "oklch(38% 0.012 85)",
+          "oklch(49% 0.012 85)",
+          "oklch(61% 0.012 85)",
+          "oklch(72% 0.012 85)",
+          "oklch(84% 0.012 85)",
+          "oklch(95% 0.012 85)"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Meta Ink",
+        "canonical": "oklch(62% 0.012 85)",
+        "tonalRamp": [
+          "oklch(15% 0.012 85)",
+          "oklch(26% 0.012 85)",
+          "oklch(38% 0.012 85)",
+          "oklch(49% 0.012 85)",
+          "oklch(61% 0.012 85)",
+          "oklch(72% 0.012 85)",
+          "oklch(84% 0.012 85)",
+          "oklch(95% 0.012 85)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(31% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "control": {
+        "role": "neutral",
+        "displayName": "Control Grey",
+        "canonical": "oklch(55% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Press Green",
+        "canonical": "oklch(76% 0.13 155)",
+        "tonalRamp": [
+          "oklch(15% 0.13 155)",
+          "oklch(26% 0.13 155)",
+          "oklch(38% 0.13 155)",
+          "oklch(49% 0.13 155)",
+          "oklch(61% 0.13 155)",
+          "oklch(72% 0.13 155)",
+          "oklch(84% 0.13 155)",
+          "oklch(95% 0.13 155)"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Press Green, Lit",
+        "canonical": "oklch(81% 0.12 155)",
+        "tonalRamp": [
+          "oklch(15% 0.12 155)",
+          "oklch(26% 0.12 155)",
+          "oklch(38% 0.12 155)",
+          "oklch(49% 0.12 155)",
+          "oklch(61% 0.12 155)",
+          "oklch(72% 0.12 155)",
+          "oklch(84% 0.12 155)",
+          "oklch(95% 0.12 155)"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Deep Green Ink",
+        "canonical": "oklch(22% 0.03 155)",
+        "tonalRamp": [
+          "oklch(15% 0.03 155)",
+          "oklch(26% 0.03 155)",
+          "oklch(38% 0.03 155)",
+          "oklch(49% 0.03 155)",
+          "oklch(61% 0.03 155)",
+          "oklch(72% 0.03 155)",
+          "oklch(84% 0.03 155)",
+          "oklch(95% 0.03 155)"
+        ]
+      },
+      "unreleased": {
+        "role": "secondary",
+        "displayName": "Unreleased Amber",
+        "canonical": "oklch(82% 0.13 80)",
+        "tonalRamp": [
+          "oklch(15% 0.13 80)",
+          "oklch(26% 0.13 80)",
+          "oklch(38% 0.13 80)",
+          "oklch(49% 0.13 80)",
+          "oklch(61% 0.13 80)",
+          "oklch(72% 0.13 80)",
+          "oklch(84% 0.13 80)",
+          "oklch(95% 0.13 80)"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Failure Red",
+        "canonical": "oklch(72% 0.15 28)",
+        "tonalRamp": [
+          "oklch(15% 0.15 28)",
+          "oklch(26% 0.15 28)",
+          "oklch(38% 0.15 28)",
+          "oklch(49% 0.15 28)",
+          "oklch(61% 0.15 28)",
+          "oklch(72% 0.15 28)",
+          "oklch(84% 0.15 28)",
+          "oklch(95% 0.15 28)"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Focus Green",
+        "canonical": "oklch(86% 0.11 155)",
+        "tonalRamp": [
+          "oklch(15% 0.11 155)",
+          "oklch(26% 0.11 155)",
+          "oklch(38% 0.11 155)",
+          "oklch(49% 0.11 155)",
+          "oklch(61% 0.11 155)",
+          "oklch(72% 0.11 155)",
+          "oklch(84% 0.11 155)",
+          "oklch(95% 0.11 155)"
+        ]
+      },
+      "selection": {
+        "role": "neutral",
+        "displayName": "Selection Umber",
+        "canonical": "oklch(36% 0.02 85)",
+        "tonalRamp": [
+          "oklch(15% 0.02 85)",
+          "oklch(26% 0.02 85)",
+          "oklch(38% 0.02 85)",
+          "oklch(49% 0.02 85)",
+          "oklch(61% 0.02 85)",
+          "oklch(72% 0.02 85)",
+          "oklch(84% 0.02 85)",
+          "oklch(95% 0.02 85)"
+        ]
+      },
+      "qr-plate": {
+        "role": "neutral",
+        "displayName": "QR Plate",
+        "canonical": "oklch(96% 0.008 85)",
+        "tonalRamp": [
+          "oklch(15% 0.008 85)",
+          "oklch(26% 0.008 85)",
+          "oklch(38% 0.008 85)",
+          "oklch(49% 0.008 85)",
+          "oklch(61% 0.008 85)",
+          "oklch(72% 0.008 85)",
+          "oklch(84% 0.008 85)",
+          "oklch(95% 0.008 85)"
+        ]
+      },
+      "qr-ink": {
+        "role": "neutral",
+        "displayName": "QR Ink",
+        "canonical": "oklch(18.2% 0 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The page's one h1: Running 0.1.8, Notes, Sign in."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The admin page's section heads: Unreleased, Set up an app, App UI. Untracked."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "The project's name, hard left in the masthead; truncates, never wraps."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose, ledes, notices and status lines at a 62ch measure; the app's input values."
+      },
+      "body-sm": {
+        "displayName": "Body small",
+        "purpose": "Bylines, asides, consequences, help lines, fact terms, entry notes, the update bar."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Button labels, never wrapping; field labels at the same size and weight with prose leading."
+      },
+      "state": {
+        "displayName": "State",
+        "purpose": "State words, uppercase: PENDING, NOT IN THE REPO, AVAILABLE, APPLIED, IN THE REPO, UP TO DATE, PINNED."
+      },
+      "colophon": {
+        "displayName": "Colophon",
+        "purpose": "The dense footer line."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Machine strings only: versions, hashes, paths, URLs, logins, dates; tabular figures."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The one easing: colour changes on hover and press (links, buttons, input borders)."
+      },
+      {
+        "name": "dur-short",
+        "value": "150ms",
+        "purpose": "The one duration. Focus rings and state changes are instant, never transitioned."
+      },
+      {
+        "name": "press",
+        "value": "translateY(1px)",
+        "purpose": "A pressed button sinks 1px, untransitioned."
+      },
+      {
+        "name": "success-hold",
+        "value": "1500ms",
+        "purpose": "A button holds its success label (Copied, Saved) on an ink outline, then its own label returns."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition: none",
+        "purpose": "prefers-reduced-motion drops every colour fade and the press sink."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "30rem",
+        "purpose": "Below it: an admin entry's state words drop under its name; the setup facts stack."
+      },
+      {
+        "name": "split",
+        "value": "40rem",
+        "purpose": "From it: the setup QR stands left of its facts."
+      },
+      {
+        "name": "wide",
+        "value": "48rem",
+        "purpose": "From it: the page gutter doubles, 1rem to 2rem."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action that resolves a section's state, its consequence written beside it.",
+      "html": "<div class=\"ds-btn-primary-row\"><button class=\"ds-btn-primary\" type=\"button\">Apply 1 migration</button><span class=\"ds-btn-primary-consequence\">restarts the add-on</span></div>",
+      "css": ".ds-btn-primary-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2xs) var(--space-sm); } .ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; min-height: var(--control-height); padding: 0 var(--space-sm); border: 1px solid transparent; border-radius: var(--radius); background: var(--color-accent); color: var(--color-accent-ink); font: 700 var(--text-sm)/1.3 var(--font-body); white-space: nowrap; cursor: pointer; outline: 2px solid transparent; outline-offset: 2px; transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); } .ds-btn-primary:hover { background: var(--color-accent-hover); } .ds-btn-primary:focus-visible { outline-color: var(--color-focus); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; } .ds-btn-primary[data-state=\"loading\"] { opacity: 0.8; cursor: progress; } .ds-btn-primary[data-state=\"error\"] { background: transparent; color: var(--color-danger); border-color: var(--color-danger); } .ds-btn-primary[data-state=\"success\"] { background: transparent; color: var(--color-ink); border-color: var(--color-control); } .ds-btn-primary-consequence { font: 400 var(--text-sm)/1.6 var(--font-body); color: var(--color-ink-3); white-space: nowrap; } @media (prefers-reduced-motion: reduce) { .ds-btn-primary { transition: none; } .ds-btn-primary:active { transform: none; } }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Upload, Commit to repo, Copy link, Save, Check again: an ink label on a control-grey outline. Shown beside its error state.",
+      "html": "<div class=\"ds-btn-secondary-row\"><button class=\"ds-btn-secondary\" type=\"button\">Copy link</button><button class=\"ds-btn-secondary\" type=\"button\" data-state=\"error\">Try again</button></div>",
+      "css": ".ds-btn-secondary-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2xs) var(--space-sm); } .ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; min-height: var(--control-height); padding: 0 var(--space-sm); border: 1px solid var(--color-control); border-radius: var(--radius); background: transparent; color: var(--color-ink); font: 700 var(--text-sm)/1.3 var(--font-body); white-space: nowrap; cursor: pointer; outline: 2px solid transparent; outline-offset: 2px; transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); } .ds-btn-secondary:hover { background: var(--color-paper-2); border-color: var(--color-ink-3); } .ds-btn-secondary:focus-visible { outline-color: var(--color-focus); } .ds-btn-secondary:active { transform: translateY(1px); } .ds-btn-secondary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; } .ds-btn-secondary[data-state=\"loading\"] { opacity: 0.8; cursor: progress; } .ds-btn-secondary[data-state=\"error\"] { background: transparent; color: var(--color-danger); border-color: var(--color-danger); } .ds-btn-secondary[data-state=\"success\"] { background: transparent; color: var(--color-ink); border-color: var(--color-control); } @media (prefers-reduced-motion: reduce) { .ds-btn-secondary { transition: none; } .ds-btn-secondary:active { transform: none; } }"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "A utility (Copy path, Download, Sign out) set as underlined text with no side padding, so it aligns with the words around it.",
+      "html": "<div class=\"ds-btn-quiet-row\"><span class=\"ds-btn-quiet-label\">Folder</span><code class=\"ds-btn-quiet-path\">pb_migrations</code><button class=\"ds-btn-quiet\" type=\"button\">Copy path</button></div>",
+      "css": ".ds-btn-quiet-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3xs) var(--space-xs); font: 400 var(--text-md)/1.6 var(--font-body); color: var(--color-ink); } .ds-btn-quiet-label { font-size: var(--text-sm); color: var(--color-ink-3); white-space: nowrap; } .ds-btn-quiet-path { font-family: var(--font-mono); font-size: 0.875em; color: var(--color-ink); font-variant-numeric: tabular-nums; } .ds-btn-quiet { display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0; border: 1px solid transparent; border-radius: var(--radius); background: transparent; color: var(--color-ink-2); font: 700 var(--text-sm)/1.3 var(--font-body); text-decoration: underline 1px var(--color-control); text-underline-offset: 3px; white-space: nowrap; cursor: pointer; outline: 2px solid transparent; outline-offset: 2px; transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); } .ds-btn-quiet:hover { color: var(--color-ink); text-decoration-color: currentColor; } .ds-btn-quiet:focus-visible { outline-color: var(--color-focus); } .ds-btn-quiet:active { transform: translateY(1px); } @media (prefers-reduced-motion: reduce) { .ds-btn-quiet { transition: none; } .ds-btn-quiet:active { transform: none; } }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A bar-paper well at 1rem with a label above and a help line below that reserves its line; shown after a failed sign-in.",
+      "html": "<div class=\"ds-input-form\"><div class=\"ds-input-field\"><label class=\"ds-input-label\" for=\"ds-input-email\">Email</label><input class=\"ds-input\" id=\"ds-input-email\" type=\"email\" autocomplete=\"off\"></div><div class=\"ds-input-field\"><label class=\"ds-input-label\" for=\"ds-input-password\">Password</label><input class=\"ds-input\" id=\"ds-input-password\" type=\"password\" value=\"password\" aria-invalid=\"true\"></div><p class=\"ds-input-help ds-input-help-error\">That email and password do not match the app login.</p></div>",
+      "css": ".ds-input-form { display: grid; gap: var(--space-sm); max-width: 24rem; } .ds-input-field { display: grid; gap: var(--space-3xs); } .ds-input-label { font: 700 var(--text-sm)/1.6 var(--font-body); color: var(--color-ink); } .ds-input { min-width: 0; width: 100%; min-height: var(--control-height); padding: 0 var(--space-xs); border: 1px solid var(--color-control); border-radius: var(--radius); background: var(--color-paper-2); color: var(--color-ink); font: 400 var(--text-md)/1.3 var(--font-body); caret-color: var(--color-accent); outline: 2px solid transparent; outline-offset: 1px; transition: border-color var(--dur-short) var(--ease-out); } .ds-input::placeholder { color: var(--color-ink-3); } .ds-input:hover { border-color: var(--color-ink-3); } .ds-input:focus-visible { outline-color: var(--color-focus); } .ds-input[aria-invalid=\"true\"] { border-color: var(--color-danger); } .ds-input:disabled { opacity: 0.55; cursor: not-allowed; } .ds-input-help { margin: 0; min-height: 1lh; font: 400 var(--text-sm)/1.6 var(--font-body); color: var(--color-ink-3); } .ds-input-help-error { color: var(--color-danger); } @media (prefers-reduced-motion: reduce) { .ds-input { transition: none; } }"
+    },
+    {
+      "name": "Masthead",
+      "kind": "nav",
+      "refersTo": "masthead",
+      "description": "N9: the project's name hard left, the one action hard right, a hairline below. The new-tab arrow is its own 28 x 44 target.",
+      "html": "<header class=\"ds-masthead\"><span class=\"ds-masthead-name\">Catlab Bro</span><nav class=\"ds-masthead-nav\" aria-label=\"Dashboard\"><a class=\"ds-masthead-link\" href=\"#\">Open dashboard</a><a class=\"ds-masthead-tab\" href=\"#\" aria-label=\"Open the dashboard in a new tab\"><svg class=\"ds-masthead-icon\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M6.5 3.5h-3v9h9v-3M9.5 3.5h3v3M12.5 3.5 7 9\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></a></nav></header>",
+      "css": ".ds-masthead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); min-height: 3.5rem; padding: var(--space-2xs) var(--page-gutter); border-bottom: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink); } .ds-masthead-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 var(--text-lg)/1.4 var(--font-display); } .ds-masthead-nav { display: flex; align-items: center; gap: var(--space-3xs); flex: none; } .ds-masthead-link { display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 0 0 var(--space-2xs); white-space: nowrap; font: 700 var(--text-md)/1.6 var(--font-body); color: var(--color-ink); text-decoration: underline 1px var(--color-control); text-underline-offset: 3px; border-radius: var(--radius); outline: 2px solid transparent; outline-offset: 2px; transition: color var(--dur-short) var(--ease-out), text-decoration-color var(--dur-short) var(--ease-out); } .ds-masthead-link:hover { text-decoration-color: currentColor; } .ds-masthead-link:active { color: var(--color-ink-2); } .ds-masthead-link:focus-visible { outline-color: var(--color-focus); } .ds-masthead-tab { display: inline-grid; place-items: center start; width: 1.75rem; height: var(--control-height); color: var(--color-ink-2); border-radius: var(--radius); outline: 2px solid transparent; outline-offset: 2px; transition: color var(--dur-short) var(--ease-out); } .ds-masthead-tab:hover { color: var(--color-ink); } .ds-masthead-tab:focus-visible { outline-color: var(--color-focus); } .ds-masthead-icon { width: 1em; height: 1em; } @media (prefers-reduced-motion: reduce) { .ds-masthead-link, .ds-masthead-tab { transition: none; } }"
+    },
+    {
+      "name": "State Words",
+      "kind": "chip",
+      "refersTo": "state-word",
+      "description": "States are words: amber for what needs attention, meta ink for the rest. Not interactive.",
+      "html": "<span class=\"ds-states\"><span class=\"ds-state ds-state-attention\">Pending</span><span class=\"ds-state ds-state-attention\">Not in the repo</span><span class=\"ds-state\">Applied</span><span class=\"ds-state\">In the repo</span><span class=\"ds-state\">Up to date</span></span>",
+      "css": ".ds-states { display: inline-flex; flex-wrap: wrap; gap: var(--space-3xs) var(--space-2xs); } .ds-state { display: inline-block; white-space: nowrap; color: var(--color-ink-3); font: 700 var(--text-xs)/1.3 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; } .ds-state-attention { color: var(--color-unreleased); }"
+    },
+    {
+      "name": "Release Entry",
+      "kind": "custom",
+      "refersTo": "entry-row",
+      "description": "The admin page's ledger row: a drop-in's name and date in mono, state words at the right, then its actions or a meta note.",
+      "html": "<ul class=\"ds-entries\"><li class=\"ds-entry\"><span><code class=\"ds-entry-name\">1790950000_add_cats.js</code><time class=\"ds-entry-when\" datetime=\"2026-10-02\">2 Oct 2026</time></span><span class=\"ds-entry-states\"><span class=\"ds-entry-state ds-entry-state-attention\">Pending</span><span class=\"ds-entry-state ds-entry-state-attention\">Not in the repo</span></span><div class=\"ds-entry-actions\"><a class=\"ds-entry-commit\" href=\"#\">Commit to repo<svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M6.5 3.5h-3v9h9v-3M9.5 3.5h3v3M12.5 3.5 7 9\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></a><a class=\"ds-entry-download\" href=\"#\">Download</a></div></li><li class=\"ds-entry\"><span><code class=\"ds-entry-name\">0001_init.js</code></span><span class=\"ds-entry-states\"><span class=\"ds-entry-state\">In the repo</span></span><p class=\"ds-entry-note\">Shipped by the add-on now. You can delete the drop-in: <code class=\"ds-entry-path\">pb_migrations/<wbr>0001_init.js</code></p></li></ul>",
+      "css": ".ds-entries { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink); font: 400 var(--text-md)/1.6 var(--font-body); } .ds-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: var(--space-3xs) var(--space-sm); padding: var(--space-xs) 0; border-bottom: 1px solid var(--color-rule); } .ds-entry-name, .ds-entry-path { font-family: var(--font-mono); font-size: 0.875em; color: var(--color-ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; } .ds-entry-when { margin-inline-start: var(--space-2xs); font: 400 var(--text-xs)/1.3 var(--font-mono); color: var(--color-ink-3); white-space: nowrap; } .ds-entry-states { display: inline-flex; flex-wrap: wrap; gap: var(--space-3xs) var(--space-2xs); justify-self: end; } .ds-entry-state { display: inline-block; white-space: nowrap; color: var(--color-ink-3); font: 700 var(--text-xs)/1.3 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; } .ds-entry-state-attention { color: var(--color-unreleased); } .ds-entry-note { grid-column: 1 / -1; margin: 0; font-size: var(--text-sm); color: var(--color-ink-3); } .ds-entry-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2xs); margin-top: var(--space-3xs); } .ds-entry-commit { display: inline-flex; align-items: center; gap: var(--space-2xs); min-height: var(--control-height); padding: 0 var(--space-sm); border: 1px solid var(--color-control); border-radius: var(--radius); color: var(--color-ink); font: 700 var(--text-sm)/1.3 var(--font-body); text-decoration: none; white-space: nowrap; outline: 2px solid transparent; outline-offset: 2px; transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); } .ds-entry-commit svg { width: 1em; height: 1em; margin-inline-start: calc(-1 * var(--space-3xs)); } .ds-entry-commit:hover { background: var(--color-paper-2); border-color: var(--color-ink-3); } .ds-entry-commit:focus-visible { outline-color: var(--color-focus); } .ds-entry-commit:active { transform: translateY(1px); } .ds-entry-download { display: inline-flex; align-items: center; min-height: var(--control-height); margin-inline-start: var(--space-xs); color: var(--color-ink-2); font: 700 var(--text-sm)/1.3 var(--font-body); text-decoration: underline 1px var(--color-control); text-underline-offset: 3px; white-space: nowrap; border-radius: var(--radius); outline: 2px solid transparent; outline-offset: 2px; transition: color var(--dur-short) var(--ease-out), text-decoration-color var(--dur-short) var(--ease-out); } .ds-entry-download:hover { color: var(--color-ink); text-decoration-color: currentColor; } .ds-entry-download:focus-visible { outline-color: var(--color-focus); } @media (max-width: 30rem) { .ds-entry { grid-template-columns: minmax(0, 1fr); } .ds-entry-states { justify-self: start; } } @media (prefers-reduced-motion: reduce) { .ds-entry-commit, .ds-entry-download { transition: none; } .ds-entry-commit:active { transform: none; } }"
+    },
+    {
+      "name": "Index Row",
+      "kind": "custom",
+      "refersTo": "index-row",
+      "description": "The app's records as a typeset index: checkbox, title, a dotted leader to a mono date. Done is meta ink, never green.",
+      "html": "<ol class=\"ds-index\"><li><label class=\"ds-index-row\"><input class=\"ds-index-check\" type=\"checkbox\"><span class=\"ds-index-body\"><span class=\"ds-index-title\">Welcome</span></span><time class=\"ds-index-date\">1 Oct</time></label></li><li><label class=\"ds-index-row ds-index-row-done\"><input class=\"ds-index-check\" type=\"checkbox\" checked><span class=\"ds-index-body\"><span class=\"ds-index-title\">Open the dashboard from the sidebar</span></span><time class=\"ds-index-date\">1 Oct</time></label></li></ol>",
+      "css": ".ds-index { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink); font: 400 var(--text-md)/1.6 var(--font-body); } .ds-index li { border-bottom: 1px solid var(--color-rule); } .ds-index-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: last baseline; column-gap: var(--space-xs); min-height: var(--control-height); padding: var(--space-2xs) 0; cursor: pointer; } .ds-index-check { width: 1.125rem; height: 1.125rem; margin: 0.3rem 0 0; align-self: start; cursor: pointer; accent-color: var(--color-ink-3); outline: 2px solid transparent; outline-offset: 2px; } .ds-index-check:focus-visible { outline-color: var(--color-focus); } .ds-index-body { position: relative; min-width: 0; } .ds-index-body::after { content: \"\"; position: absolute; left: 0; right: 0; bottom: 0.5em; border-bottom: 1px dotted var(--color-control); } .ds-index-title { position: relative; z-index: 1; padding-inline-end: var(--space-2xs); overflow-wrap: anywhere; background: var(--color-paper); color: var(--color-ink); -webkit-box-decoration-break: clone; box-decoration-break: clone; } .ds-index-date { font: 400 var(--text-sm)/1.3 var(--font-mono); color: var(--color-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; } .ds-index-row:hover .ds-index-title { text-decoration: underline; text-decoration-color: var(--color-control); text-underline-offset: 3px; } .ds-index-row-done .ds-index-title { color: var(--color-ink-3); text-decoration: line-through; text-decoration-color: var(--color-ink-3); }"
+    },
+    {
+      "name": "Update Bar",
+      "kind": "custom",
+      "refersTo": "update-bar",
+      "description": "The app's full-width band when a newer UI is out: an amber state word, the version in mono, and who installs it.",
+      "html": "<p class=\"ds-update-bar\" role=\"status\"><span class=\"ds-update-bar-state\">Available</span>A newer version of this app is out: <code class=\"ds-update-bar-code\">ui-v0.1.2</code>. An admin installs it in <a class=\"ds-update-bar-link\" href=\"#\">Setup</a>.</p>",
+      "css": ".ds-update-bar { margin: 0; padding: var(--space-xs) var(--page-gutter); background: var(--color-paper-2); border-bottom: 1px solid var(--color-rule); color: var(--color-ink); font: 400 var(--text-sm)/1.6 var(--font-body); } .ds-update-bar-state { display: inline-block; white-space: nowrap; color: var(--color-ink-3); font: 700 var(--text-xs)/1.3 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; margin-inline-end: var(--space-2xs); color: var(--color-unreleased); } .ds-update-bar-code { font-family: var(--font-mono); font-size: 0.875em; white-space: nowrap; } .ds-update-bar-link { color: var(--color-ink); text-decoration: underline 1px var(--color-control); text-underline-offset: 3px; transition: color var(--dur-short) var(--ease-out), text-decoration-color var(--dur-short) var(--ease-out); } .ds-update-bar-link:hover { text-decoration-color: currentColor; } .ds-update-bar-link:active { color: var(--color-ink-2); } .ds-update-bar-link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius); } @media (prefers-reduced-motion: reduce) { .ds-update-bar-link { transition: none; } }"
+    },
+    {
+      "name": "Notice with Act Link",
+      "kind": "custom",
+      "refersTo": "link-act",
+      "description": "The admin page's inline news line; the green act link is the off-page action that resolves it.",
+      "html": "<p class=\"ds-notice\"><span class=\"ds-notice-state\">Available</span> Version <code class=\"ds-notice-code\">0.1.9</code> is out. <a class=\"ds-notice-act\" href=\"#\">Install it on the add-on page</a></p>",
+      "css": ".ds-notice { margin: 0; max-width: var(--measure); color: var(--color-ink); font: 400 var(--text-md)/1.6 var(--font-body); } .ds-notice-state { display: inline-block; white-space: nowrap; color: var(--color-ink-3); font: 700 var(--text-xs)/1.3 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; margin-inline-end: 0.2em; color: var(--color-unreleased); } .ds-notice-code { font-family: var(--font-mono); font-size: 0.875em; font-variant-numeric: tabular-nums; } .ds-notice-act { color: var(--color-accent); text-decoration: underline 1px var(--color-accent); text-underline-offset: 3px; white-space: nowrap; transition: color var(--dur-short) var(--ease-out), text-decoration-color var(--dur-short) var(--ease-out); } .ds-notice-act:hover { color: var(--color-accent-hover); text-decoration-color: currentColor; } .ds-notice-act:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: var(--radius); } @media (prefers-reduced-motion: reduce) { .ds-notice-act { transition: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Release Notes",
+    "overview": "The admin page reads like the backend's own changelog: what is running (a version and the commit it was built from), what is unreleased (drop-in migrations that exist only on this device), and what the app needs (its login, its UI). The example app is a typeset index of the user's records on the same paper. Paper discipline on a dark ground: hairlines, measure, type; no cards, no gradients, no glow. It refuses the centred card of buttons and the stack of cards for form, list and buttons.\n\nThe physical scene: the owner, at home in the evening, opens the panel inside Home Assistant's dark theme on a laptop or a phone. The ground is Home Assistant's own neutral dark at chroma 0, so the page sits flush in the panel; the warmth lives in the ink. The density is a document's, not a dashboard's: one left-hung column, each section's state first, then the one action that resolves it, with its consequence written beside it.\n\nNothing moves. Hover and press change colour over 150ms on one ease-out curve; a pressed button sinks 1px; focus rings and every state change are instant, and reduced motion drops even the colour fades.",
+    "keyCharacteristics": [
+      "Home Assistant's neutral ground (#121212, bars #1a1a1a) under a warm off-white ink in three steps.",
+      "Green only to press, amber only for what needs attention, red only for what failed.",
+      "One family for Thai and Latin (IBM Plex Sans Thai 400/700); IBM Plex Mono only for machine strings.",
+      "Rules, not boxes: 1px between entries, 2px between sections, dotted leaders in the index.",
+      "Flat everywhere; 2px corners; 44px controls.",
+      "States are words; the only icon is the new-tab arrow.",
+      "Silent success; a costly action states its consequence."
+    ],
+    "rules": [
+      {
+        "name": "The One Ink, One Meaning Rule",
+        "body": "Green means press, amber means needs attention, red means failed, and none stands in for another. A ticked note is meta ink, \"Copied\" and \"Saved\" are ink, a selection is umber; amber never fills a button or colours a link.",
+        "section": "colors"
+      },
+      {
+        "name": "The Host's Ground Rule",
+        "body": "The ground is Home Assistant's own neutral dark at chroma 0 (#121212 content, #1a1a1a bars), so the page sits flush in its panel; the warmth lives in the ink (hue 85). This deliberately overrides Hallmark's tint-every-neutral gate, and the owner signed off on it. Never a blue-black slate, never pure black, never pure white.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family, Two Scripts Rule",
+        "body": "IBM Plex Sans Thai sets Thai and Latin alike, at 400 and 700 only, roman only. No second sans, no italic, no other weight.",
+        "section": "typography"
+      },
+      {
+        "name": "The Machine Strings Rule",
+        "body": "Mono is for what a machine wrote or will read: versions, hashes, paths, URLs, logins, dates, and a field whose value is a release tag or a URL. Never for prose, labels or headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Thai Leading Rule",
+        "body": "Thai stacks marks above and below the line: 1.3 for headings, one-line controls and state words, 1.6 for prose. Never line-height 1.",
+        "section": "typography"
+      },
+      {
+        "name": "The Left-Hung Column Rule",
+        "body": "The reading column starts at the gutter under the masthead name and never centres. Its width is the only thing a page tunes (46rem admin, 40rem app).",
+        "section": "layout"
+      },
+      {
+        "name": "The More-Above Rule",
+        "body": "A section head has more space above it than below: 3rem, a 2px rule and 2rem above; 0.5rem below.",
+        "section": "layout"
+      },
+      {
+        "name": "The Paper Rule",
+        "body": "Surfaces are flat in every state. Depth is one tonal step and a rule; a press is a 1px sink; nothing casts a shadow or glows.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Two-Pixel Rule",
+        "body": "Every corner in the system is 2px. A pill, a circle or a large radius would be a second shape language.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Consequence Rule",
+        "body": "A costly action states its consequence beside its button in 0.875rem meta ink (\"restarts the add-on\", \"no restart\", \"to serve the new source\"). A reversible action needs no confirmation.",
+        "section": "components"
+      },
+      {
+        "name": "The Silent Success Rule",
+        "body": "Success is a status line in place, or the button itself turning ink on its outline for 1.5s. Never a toast.",
+        "section": "components"
+      },
+      {
+        "name": "The State Word Rule",
+        "body": "A state is a word, never a badge, dot, glyph or colour chip.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do keep the token block between `/* tokens:start */` and `/* tokens:end */` identical, line for line, in both pages, and mirror any change in this file's frontmatter; `scripts/local-e2e.sh` fails when the two blocks differ.",
+      "Do lay the ground in `paper` (#121212) and bands in `paper-2` (#1a1a1a) at chroma 0, and keep the warmth in the ink (hue 85).",
+      "Do give every button all eight states: default, hover, focus-visible (2px ring, 2px out, instant), active (1px sink), disabled (0.55), loading (0.8, a label that says what is happening), error (red outline), success (ink outline for 1.5s).",
+      "Do write a costly action's consequence beside its button, in 0.875rem meta ink.",
+      "Do keep buttons and inputs 2.75rem (44px) tall with 2px corners.",
+      "Do set versions, hashes, paths, URLs, logins and dates in IBM Plex Mono, and break a path only after a `/`.",
+      "Do separate entries with a 1px hairline and sections with a 2px rule, with more space above a section head than below it.",
+      "Do take colour, the type scale, spacing, radius and motion from tokens (code's 0.875em is the one relative size); keep raw values to component dimensions (column widths, the 11rem QR, the 3.5rem masthead) and optical offsets (the 3px underline, the 2px focus offset)."
+    ],
+    "donts": [
+      "Don't use green for a state: a done note's checkbox is meta ink, \"Copied\" and \"Saved\" are ink, a text selection is umber.",
+      "Don't use amber for an action: it never fills a button or colours a link.",
+      "Don't tint the ground or swap it for a blue-black slate, pure black, or pure-white text.",
+      "Don't add cards, shadows, glows or gradients; structure is rules and type.",
+      "Don't confirm a success with a toast.",
+      "Don't set italic or any weight but 400 and 700: only those faces ship, so anything else is synthesized.",
+      "Don't set Thai at line-height 1.",
+      "Don't let a glyph or emoji stand in for an icon or a state; states are words.",
+      "Don't let a button label, link text or state word wrap, or a path break inside a name.",
+      "Don't set an input's text below 1rem (16px): phones zoom the page when such a field takes focus."
+    ]
+  }
+}

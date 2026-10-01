@@ -83,6 +83,18 @@ $app.rootCmd.addCommand(new Command({
 // The dashboard inside Home Assistant's sidebar panel: PocketBase adds its own CSP with
 // frame-ancestors 'none' to /_/ only when the response has none yet (apis/serve.go), so set the
 // same policy first with frame-ancestors 'self' (Home Assistant and its ingress share an origin).
+// The app UI and the admin page change in place (Update UI, a new source, a new add-on version).
+// Their HTML has a Last-Modified and no Cache-Control, so browsers could keep a stale copy on
+// heuristics: ask them to revalidate it every time (a cheap 304 when nothing changed).
+routerUse((e) => {
+  const path = e.request.url.path
+  if ((e.request.method === "GET" || e.request.method === "HEAD") && path.indexOf("/api/") !== 0 && path.indexOf("/_/") !== 0 &&
+      (path.endsWith("/") || path.endsWith(".html"))) {
+    e.response.header().set("Cache-Control", "no-cache")
+  }
+  return e.next()
+})
+
 routerUse((e) => {
   if (e.request.url.path.indexOf("/_/") === 0) {
     e.response.header().set("Content-Security-Policy",
