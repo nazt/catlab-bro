@@ -43,9 +43,22 @@ export ADMIN_EMAIL="$admin_email"
 # for the panel's setup link (pb_hooks/lib/setup.js)
 export PUBLIC_URL="$url" CREDENTIALS_FILE=/data/initial-credentials.txt SETUP_SCHEME="$(pe SETUP_SCHEME)"
 
+# Drop-in migrations/hooks (/config = /addon_configs/<slug>/ under Home Assistant; mount one at
+# /config in compose) merged with the built-in ones into /data/runtime, rebuilt on every start.
+export EXTRA_DIR="${EXTRA_DIR:-/config}"
+run=/data/runtime
+"$app/merge-extra.sh" "$app" "$EXTRA_DIR" "$run" | while read -r line; do bashio::log.info "$line"; done
+[ -f "$EXTRA_DIR/README.txt" ] || cat > "$EXTRA_DIR/README.txt" <<'TXT'
+Drop-in files for this PocketBase add-on, merged with the built-in ones on every start:
+  pb_migrations/<timestamp>_<name>.js   JS migrations (applied once, at start)
+  pb_hooks/<name>.pb.js                 JS hooks
+Then open the add-on's sidebar panel and click "Apply migrations" (it restarts the add-on).
+A file named like a built-in one is refused. Delete a file here and restart to drop a hook.
+TXT
+
 bashio::log.info "Provisioning ${project_name} (admin ${admin_email}, app login ${app_email})"
 "$app/provision.sh" --dir "$data" --state-dir /data \
-  --migrations-dir "$app/pb_migrations" --hooks-dir "$app/pb_hooks" \
+  --migrations-dir "$run/pb_migrations" --hooks-dir "$run/pb_hooks" \
   --url "$url" --project-name "$project_name" \
   --admin-email "$admin_email" --app-email "$app_email"
 
@@ -53,8 +66,8 @@ bashio::log.info "Starting PocketBase on port 8090 (public URL ${url})"
 exec pocketbase serve \
   --http 0.0.0.0:8090 \
   --dir "$data" \
-  --migrationsDir "$app/pb_migrations" \
-  --hooksDir "$app/pb_hooks" \
+  --migrationsDir "$run/pb_migrations" \
+  --hooksDir "$run/pb_hooks" \
   --publicDir "$app/pb_public" \
   --hooksWatch=false \
   --automigrate=false

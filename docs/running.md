@@ -26,6 +26,13 @@ URL), install, start, and read the **Log** tab for the logins.
   (Packages → package → Package settings → Change visibility). Release a new image by bumping
   `version:` in `config.yaml`. Private repos have no `image:` line and build on the device.
 
+- **Drop-in migrations:** JS migrations (and hooks) can be added without a new image. Put them
+  in `/addon_configs/<this add-on>/pb_migrations` (Samba or File editor add-on), or use **Upload a
+  migration** in the panel; the panel lists them as *pending* and **Apply migrations** restarts the
+  add-on, which applies them. Locally, `compose.yaml` mounts `./extra` the same way. A drop-in
+  named like a built-in file is refused. Keep migrations you want permanently in
+  `pocketbase/pb_migrations/` in the repo.
+
 Details in [`addon/catlab_bro/DOCS.md`](../addon/catlab_bro/DOCS.md).
 
 ## On an existing PocketBase

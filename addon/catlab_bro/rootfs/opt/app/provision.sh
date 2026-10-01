@@ -116,6 +116,7 @@ provision() { # role email
 provision admin "$admin_email"
 provision app "$app_email"
 chmod 600 "$creds"
+pbrun app-meta "$project_name" "$base_url" || echo "provision: WARNING: could not set the app name/URL" >&2
 
 # Starter records, once: seeded when the marker is missing and the seed dir has *.json files.
 if [ ! -f "$state_dir/.seeded" ] && ls "$seed_dir"/*.json >/dev/null 2>&1; then

@@ -10,7 +10,7 @@ dest="$here/addon/$slug/rootfs/opt/app"
 [ -d "$here/addon/$slug" ] || { echo "no add-on directory addon/$slug (ADDON_SLUG in project.env)" >&2; exit 1; }
 
 stage="$(mktemp -d)"; trap 'rm -rf "$stage"' EXIT
-cp "$here/project.env" "$here/scripts/provision.sh" "$stage/"
+cp "$here/project.env" "$here/scripts/provision.sh" "$here/scripts/merge-extra.sh" "$stage/"
 cp -R "$here/pocketbase/pb_migrations" "$here/pocketbase/pb_hooks" "$here/pocketbase/pb_public" "$stage/"
 [ -d "$here/pocketbase/seed" ] && cp -R "$here/pocketbase/seed" "$stage/"
 

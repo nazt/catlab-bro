@@ -8,3 +8,6 @@ initial-credentials.txt
 *.log
 .DS_Store
 node_modules/
+
+# drop-in migrations/hooks for a local container (move them into pocketbase/ to keep them)
+extra/

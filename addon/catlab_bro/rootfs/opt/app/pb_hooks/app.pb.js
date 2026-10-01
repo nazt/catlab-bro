@@ -37,6 +37,21 @@ $app.rootCmd.addCommand(new Command({
   },
 }))
 
+// Console command used by scripts/provision.sh on every start: the dashboard's app name and the
+// public URL (Settings → Application), so the dashboard says the project's name, not "Acme".
+//   pocketbase app-meta <name> <url> --dir ... --migrationsDir ... --hooksDir ...
+$app.rootCmd.addCommand(new Command({
+  use: "app-meta <name> <url>",
+  short: "Set the application name and URL",
+  run: (cmd, args) => {
+    if (!args || args.length !== 2) throw new Error("usage: app-meta <name> <url>")
+    const settings = $app.settings()
+    settings.meta.appName = args[0]
+    settings.meta.appURL = args[1]
+    $app.save(settings)
+  },
+}))
+
 // Console command used by scripts/provision.sh on the first start: load starter records from
 // <dir>/<collection>.json (an array of field objects). The value "@app" in any field is replaced
 // by the app login's record id (e.g. "owner": "@app"). Run once; provision.sh keeps a marker.
@@ -65,8 +80,25 @@ $app.rootCmd.addCommand(new Command({
   },
 }))
 
+// The dashboard inside Home Assistant's sidebar panel: PocketBase adds its own CSP with
+// frame-ancestors 'none' to /_/ only when the response has none yet (apis/serve.go), so set the
+// same policy first with frame-ancestors 'self' (Home Assistant and its ingress share an origin).
+routerUse((e) => {
+  if (e.request.url.path.indexOf("/_/") === 0) {
+    e.response.header().set("Content-Security-Policy",
+      "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' http://127.0.0.1:* https://tile.openstreetmap.org data: blob:; " +
+      "connect-src 'self' http://127.0.0.1:* https://nominatim.openstreetmap.org; script-src 'self' http://127.0.0.1:*; frame-ancestors 'self'")
+  }
+  return e.next()
+})
+
 // Home Assistant auto-login for the sidebar panel (see lib/halogin.js). Off unless HA_AUTO_LOGIN=true.
 routerAdd("GET", "/api/app/ha-login", (e) => require(`${__hooks}/lib/halogin.js`).haLogin(e))
+
+// Drop-in migrations for the panel (see lib/migrations.js). Superusers only.
+routerAdd("GET", "/api/app/migrations", (e) => require(`${__hooks}/lib/migrations.js`).status(e), $apis.requireSuperuserAuth())
+routerAdd("POST", "/api/app/migrations", (e) => require(`${__hooks}/lib/migrations.js`).upload(e), $apis.requireSuperuserAuth())
+routerAdd("POST", "/api/app/restart", (e) => require(`${__hooks}/lib/migrations.js`).restart(e), $apis.requireSuperuserAuth())
 
 // The app's setup link + login for the panel (see lib/setup.js). Superusers only.
 routerAdd("GET", "/api/app/setup", (e) => require(`${__hooks}/lib/setup.js`).setup(e), $apis.requireSuperuserAuth())

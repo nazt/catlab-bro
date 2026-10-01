@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3
+
+- Dashboard inside the sidebar panel.
+- Drop-in migrations: upload in the panel or /addon_configs/<this add-on>/pb_migrations, then Apply migrations.
+
 ## 0.1.2
 
 - Sidebar panel: the first Home Assistant user to open it claims it (others refused); shows the app setup link + QR.

@@ -1,5 +1,5 @@
 name: Catlab Bro
-version: "0.1.2"
+version: "0.1.3"
 image: "ghcr.io/nazt/{arch}-addon-catlab-bro"
 slug: catlab_bro
 description: PocketBase backend for Catlab Bro
@@ -17,6 +17,12 @@ ingress_port: 8090
 panel_icon: mdi:database
 panel_title: Catlab Bro
 watchdog: http://[HOST]:[PORT:8090]/api/health
+# The panel's "Apply migrations" asks the Supervisor to restart this add-on (/addons/self/restart).
+hassio_api: true
+# Drop-in migrations and hooks: /addon_configs/<this add-on>/pb_migrations, …/pb_hooks on the host
+# (Samba or File editor add-on) = /config here; merged on every start (scripts/merge-extra.sh).
+map:
+  - addon_config:rw
 ports:
   8090/tcp: 8277
 ports_description:

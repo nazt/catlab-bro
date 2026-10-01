@@ -37,7 +37,7 @@ RUN set -eux; \
 # root's files, written by scripts/sync-addon.sh (never edit them here).
 COPY rootfs /
 COPY run.sh /run.sh
-RUN chmod 755 /run.sh /opt/app/provision.sh
+RUN chmod 755 /run.sh /opt/app/provision.sh /opt/app/merge-extra.sh
 
 EXPOSE 8090
 CMD [ "/run.sh" ]

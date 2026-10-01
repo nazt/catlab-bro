@@ -15,8 +15,8 @@ the work, and list your open questions in the PR description.
    and its comments, `project.env`, the repository name.
    - **Name:** the init workflow already named the project after the repository (`catlab-bro`
      becomes "Catlab Bro" / `catlab_bro` in `project.env`). If `project.env` still says
-     `PROJECT_SLUG=pocketbase_template` (init did not run), derive it from the repository
-     name the same way. Never leave "PocketBase Template" in place.
+     `PROJECT_SLUG=catlab_bro` (init did not run), derive it from the repository
+     name the same way. Never leave "Catlab Bro" in place.
    - **Purpose and data model:** use what the human or the issue says. If nothing is given,
      keep the `notes` example, finish everything else, and ask in the PR. Never invent
      collections.
@@ -103,6 +103,13 @@ Rule guidance:
   `app.save`, `$app.findAuthRecordByEmail`). Do not use pre-0.23 examples (`new Schema`,
   `Dao`, `SchemaField`).
 
+## Drop-in migrations
+
+Users can add migrations at runtime (panel upload or `/addon_configs/<slug>/pb_migrations`),
+merged by `scripts/merge-extra.sh` on every start. When you turn such a file into part of the
+project, move it into `pocketbase/pb_migrations/` (keep its name) and regenerate
+`collections.json`; never edit `addon/<slug>/rootfs/`.
+
 ## Definition of done
 
 All of these, with output you have actually seen:
@@ -116,7 +123,7 @@ All of these, with output you have actually seen:
   `docker compose logs`, `curl -fs http://127.0.0.1:8090/api/health` succeeds, then
   `docker compose down -v`.
 - README describes the project, not the template; no leftover `notes` unless intended;
-  `grep -ri "pocketbase template\|pocketbase_template"` only finds intended mentions.
+  `grep -ri "pocketbase template\|catlab_bro"` only finds intended mentions.
 
 Report what you ran and what it printed. If something could not be run (no Docker, no
 `pocketbase` binary), say so instead of claiming it passed.

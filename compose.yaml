@@ -25,6 +25,9 @@ services:
         required: false
     volumes:
       - pb-data:/data
+      # drop-in migrations/hooks (extra/pb_migrations, extra/pb_hooks), merged on every start;
+      # the same folder Home Assistant maps from /addon_configs/<slug>/
+      - ./extra:/config
 
 volumes:
   pb-data:
