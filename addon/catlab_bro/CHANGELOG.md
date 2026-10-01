@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Panel checks for a new UI release when it opens (template) (b3b5613)
+
 ## 0.1.5
 
 - App UI at / (ui/ -> release dist.zip), admin page at /_setup/, Update UI (template 3b82fe7) (8990b25)
