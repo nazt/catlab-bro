@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+
+- Add cats collection (drop-in migration from the Catlab Bro panel) (0541b52)
+
 ## 0.1.6
 
 - Panel checks for a new UI release when it opens (template) (b3b5613)
