@@ -33,6 +33,7 @@
   </div>
   <div class="card" id="notes" hidden>
     <p><input id="new" placeholder="New note" size="30"> <button id="add">Add</button> <button id="out">Sign out</button></p>
+    <p><small id="count"></small></p>
     <ul id="list"></ul>
   </div>
   <small><a href="./_setup/">Setup</a> · UI <span id="ver"></span></small>
@@ -49,6 +50,7 @@
     const r = await api("collections/notes/records?sort=-created&perPage=100")
     if (r.status === 401) { auth = null; localStorage.removeItem("app_auth"); return load() }
     const items = (await r.json()).items || []
+    $("count").textContent = items.length + " note" + (items.length === 1 ? "" : "s") + " · tap one to mark it done"
     $("list").innerHTML = ""
     for (const n of items) {
       const li = document.createElement("li"); li.textContent = n.title; if (n.done) li.className = "done"
